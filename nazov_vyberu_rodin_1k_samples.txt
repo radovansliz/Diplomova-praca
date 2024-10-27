@@ -1,0 +1,24 @@
+Pre prvu selekciu dat pre 1000k vzoriek z 10tich rodin boli vybrane nasledovne rodiny zo suborov _before_reboot:
+
+
+Trojan-Spy:
+smsthief
+smforw
+
+Adware:
+airpush
+ewind
+
+PUA:
+secapk
+
+Ransomware:
+smsspy
+
+Riskware:
+skymobi
+mobilepay
+
+Trojan:
+mytrackp
+cnsms
