@@ -1,24 +1,13 @@
-Pre prvu selekciu dat pre 1000k vzoriek z 10tich rodin boli vybrane nasledovne rodiny zo suborov _before_reboot:
+Pre prvu selekciu dat pre 1000k vzoriek z 10tich rodin boli vybrane nasledovne rodiny zo suborov before aj after reboot dokopy:
 
 
-Trojan-Spy:
-smsthief
-smforw
-
-Adware:
-airpush
-ewind
-
-PUA:
-secapk
-
-Ransomware:
-smsspy
-
-Riskware:
-skymobi
-mobilepay
-
-Trojan:
-mytrackp
-cnsms
+  Family: smsreg, 
+  Family: skymobi
+  Family: shedun
+  Family: airpush
+  Family: mytrackp
+  Family: slocker
+  Family: inoco
+  Family: smforw
+  Family: smsagent
+  Family: locker
