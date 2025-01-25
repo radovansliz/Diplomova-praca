@@ -58,9 +58,9 @@ cv_results = xgb.cv(
     param,
     dtrain,
     num_boost_round=num_round,
-    nfold=5,
+    nfold=10,
     metrics=["mlogloss", "merror"],
-    early_stopping_rounds=10,
+    early_stopping_rounds=20,
     seed=42,
     callbacks=[xgb.callback.EvaluationMonitor(show_stdv=True)],
 )
@@ -121,7 +121,7 @@ def evaluate_model(model, dval, y_val, dtest, y_test):
         
         # Informácie o krížovej validácii
         f.write("Cross-Validation Settings:\n")
-        f.write(f"Number of Folds: 5\n")
+        f.write(f"Number of Folds: 10\n")
         f.write(f"Early Stopping Rounds: 10\n\n")
         f.write("Cross-Validation Results:\n")
         f.write(cv_results.to_string() + "\n\n")
