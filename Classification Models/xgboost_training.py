@@ -29,12 +29,27 @@ y = label_encoder.fit_transform(y)
 print("Label encoding completed. Classes:", label_encoder.classes_)
 
 # Rozdelenie datasetu na tréningovú, testovaciu a validačnú množinu
-X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.4, random_state=42, stratify=y)
-X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp)
+# pôvodný kód
+# X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+# X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.2, random_state=42, stratify=y_temp)
+
+# upravený kód
+X_train, X_temp, y_train, y_temp = train_test_split(
+    X, y, test_size=0.4, random_state=42, stratify=y
+)
+X_val, X_test, y_val, y_test = train_test_split(
+    X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp
+)
 
 print("Dataset rozdeleny")
 
 # Vytvorenie DMatrix pre XGBoost
+# pôvodný kód
+# dtrain = xgb.DMatrix(X_train, label=y_train)
+# dval = xgb.DMatrix(X_val, label=y_val)
+# dtest = xgb.DMatrix(X_test, label=y_test)
+
+# upravený kód
 dtrain = xgb.DMatrix(X_train, label=y_train)
 dval = xgb.DMatrix(X_val, label=y_val)
 dtest = xgb.DMatrix(X_test, label=y_test)
@@ -43,8 +58,14 @@ dtest = xgb.DMatrix(X_test, label=y_test)
 param = {
     "objective": "multi:softmax",  # Multiclass classification
     "num_class": len(np.unique(y)),  # Počet tried
-    "max_depth": 6,
+    # pôvodné nastavenie max_depth
+    # "max_depth": 6,
+    # upravené nastavenie max_depth
+    "max_depth": 4,  # Zníženie hĺbky stromu pre lepšiu generalizáciu
     "learning_rate": 0.1,
+    # pridanie regularizácie
+    "lambda": 1.0,  # L2 regularizácia
+    "alpha": 0.1,   # L1 regularizácia
     "subsample": 0.8,
     "colsample_bytree": 0.8,
     "seed": 42,
@@ -61,9 +82,11 @@ cv_results = xgb.cv(
     nfold=10,
     metrics=["mlogloss", "merror"],
     early_stopping_rounds=20,
-    seed=42,
-    callbacks=[xgb.callback.EvaluationMonitor(show_stdv=True)],
+    seed=42
 )
+
+optimal_rounds = cv_results['test-mlogloss-mean'].idxmin() + 1
+print(f"Optimal number of boosting rounds: {optimal_rounds}")
 
 print("Cross-validation results:")
 print(cv_results)
@@ -73,7 +96,10 @@ print("Training XGBoost model...")
 bst = xgb.train(
     param,
     dtrain,
-    num_boost_round=num_round,
+    # pôvodné nastavenie num_boost_round
+    # num_boost_round=optimal_rounds,
+    # upravené
+    num_boost_round=optimal_rounds,  # Optimalizované podľa CV výsledkov
     evals=[(dval, "Validation")],
     early_stopping_rounds=10
 )
@@ -133,14 +159,23 @@ def evaluate_model(model, dval, y_val, dtest, y_test):
         f.write(report)
 
     # 3. Loss krivka - simulujeme presnosť pri rôznych veľkostiach tréningovej množiny
-    train_sizes = np.linspace(0.1, 0.9, 9)  # Upravené: 0.1 až 0.9
+    train_sizes = np.linspace(0.1, 0.9, 9)
     train_scores, val_scores = [], []
     for frac in train_sizes:
-        X_frac, _, y_frac, _ = train_test_split(X_train, y_train, train_size=float(frac), stratify=y_train, random_state=42)
+        min_samples = 50  # Minimálny počet vzoriek
+        # pôvodné rozdelenie
+        # X_frac, _, y_frac, _ = train_test_split(
+        #     X_train, y_train, train_size=float(frac), stratify=y_train, random_state=42
+        # )
+        # upravené
+        X_frac, _, y_frac, _ = train_test_split(
+            X_train, y_train, train_size=max(float(frac), min_samples / len(X_train)),
+            stratify=y_train, random_state=42
+        )
         dfrac = xgb.DMatrix(X_frac, label=y_frac)
-        model = xgb.train(param, dfrac, num_boost_round=num_round)
+        model = xgb.train(param, dfrac, num_boost_round=optimal_rounds)
         train_scores.append(accuracy_score(y_frac, model.predict(dfrac).astype(int)))
-        val_scores.append(accuracy_score(y_val, model.predict(dval).astype(int)))
+        val_scores.append(accuracy_score(y_val, bst.predict(dval).astype(int)))
 
     plt.plot(train_sizes, train_scores, label="Train Accuracy")
     plt.plot(train_sizes, val_scores, label="Validation Accuracy")
