@@ -1,0 +1,26 @@
+Validation Accuracy: 0.95
+Test Accuracy: 0.95
+
+Cross-Validation Scores: [0.93452381 0.94166667 0.92738095 0.93928571 0.93214286 0.93214286
+ 0.93809524 0.93809524 0.94047619 0.94761905]
+Mean CV Score: 0.94
+
+Classification Report:
+              precision    recall  f1-score   support
+
+     airpush       0.95      0.95      0.95       120
+       inoco       0.98      1.00      0.99       120
+      locker       0.89      0.80      0.84       120
+    mytrackp       1.00      1.00      1.00       120
+      shedun       0.94      0.97      0.95       120
+     skymobi       0.97      0.95      0.96       120
+     slocker       0.83      0.91      0.87       120
+      smforw       1.00      0.94      0.97       120
+    smsagent       0.96      0.97      0.97       120
+      smsreg       0.99      0.94      0.97       120
+    smsthief       0.97      0.94      0.95       120
+    styricka       0.91      1.00      0.95       120
+
+    accuracy                           0.95      1440
+   macro avg       0.95      0.95      0.95      1440
+weighted avg       0.95      0.95      0.95      1440
