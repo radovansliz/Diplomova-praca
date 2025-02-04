@@ -1,0 +1,31 @@
+Model Configuration:
+{'boosting_type': 'gbdt', 'class_weight': None, 'colsample_bytree': 0.8, 'importance_type': 'split', 'learning_rate': 0.02, 'max_depth': 4, 'min_child_samples': 60, 'min_child_weight': 0.001, 'min_split_gain': 0.0, 'n_estimators': 75, 'n_jobs': None, 'num_leaves': 5, 'objective': None, 'random_state': 42, 'reg_alpha': 1.2, 'reg_lambda': 1.2, 'subsample': 0.7, 'subsample_for_bin': 200000, 'subsample_freq': 0, 'bagging_fraction': 0.7, 'bagging_freq': 5}
+
+Validation Accuracy: 0.91
+Validation F1 Score: 0.91
+Test Accuracy: 0.90
+Test F1 Score: 0.90
+
+Cross-Validation Scores: [0.92428142 0.88834331 0.89516879 0.89279486 0.90688456 0.8863127
+ 0.89282143 0.90660433 0.87045534 0.88279488]
+Mean CV Score: 0.89
+
+Classification Report:
+              precision    recall  f1-score   support
+
+     airpush       0.95      0.90      0.92       200
+       inoco       0.96      0.99      0.98       200
+      locker       0.86      0.66      0.75       200
+    mytrackp       1.00      1.00      1.00       200
+      shedun       0.93      0.96      0.94       200
+     skymobi       0.96      0.96      0.96       200
+     slocker       0.71      0.92      0.80       200
+      smforw       0.96      0.87      0.91       200
+    smsagent       0.89      0.88      0.88       200
+      smsreg       0.95      0.83      0.89       200
+    smsthief       0.85      0.89      0.87       200
+    styricka       0.83      0.92      0.87       200
+
+    accuracy                           0.90      2400
+   macro avg       0.90      0.90      0.90      2400
+weighted avg       0.90      0.90      0.90      2400
