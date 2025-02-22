@@ -26,9 +26,11 @@ print("Dataset split into training, validation, and test sets.")
 
 # Definícia modelu Random Forest
 rf_model = RandomForestClassifier(
-    n_estimators=1000,  # Počet stromov (hyperparameter na ladenie)
-    max_depth=None,    # Maximálna hĺbka stromov (hyperparameter na ladenie)
-    random_state=42    # Pre reprodukovateľnosť
+    n_estimators=75,  # Počet stromov (hyperparameter na ladenie)
+    max_depth=8,    # Maximálna hĺbka stromov (hyperparameter na ladenie)
+    random_state=42,    # Pre reprodukovateľnosť
+    min_samples_split=5,
+    min_samples_leaf=2
 )
 print("RandomForestClassifier initialized.")
 
