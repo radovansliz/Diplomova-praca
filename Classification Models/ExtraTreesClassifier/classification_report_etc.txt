@@ -1,0 +1,22 @@
+Validation Accuracy: 0.88
+Test Accuracy: 0.87
+
+Classification Report:
+              precision    recall  f1-score   support
+
+     airpush       0.90      0.88      0.89       120
+       inoco       0.96      0.89      0.93       120
+      locker       0.85      0.69      0.76       120
+    mytrackp       1.00      1.00      1.00       120
+      shedun       0.95      0.78      0.85       120
+     skymobi       0.84      0.96      0.89       120
+     slocker       0.70      0.92      0.79       120
+      smforw       0.96      0.87      0.91       120
+    smsagent       0.77      0.83      0.80       120
+      smsreg       0.98      0.80      0.88       120
+    smsthief       0.76      0.91      0.83       120
+    styricka       0.84      0.86      0.85       120
+
+    accuracy                           0.87      1440
+   macro avg       0.88      0.87      0.87      1440
+weighted avg       0.88      0.87      0.87      1440
