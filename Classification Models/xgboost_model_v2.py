@@ -1,148 +1,138 @@
-import os
-import sys
-import logging
-import numpy as np
 import pandas as pd
+import numpy as np
+import xgboost as xgb
 import matplotlib.pyplot as plt
-import seaborn as sns
-
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
-from sklearn.model_selection import StratifiedKFold, learning_curve
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
-from xgboost import XGBClassifier
 
-# Funkcia na nastavenie logovania do súboru a konzoly
-def setup_logger(log_file):
-    logger = logging.getLogger('xgboost_logger')
-    logger.setLevel(logging.DEBUG)
-    # Vyčistenie predchádzajúcich handlerov, ak existujú
-    if logger.hasHandlers():
-        logger.handlers.clear()
-    # Vytvorenie file handler-a
-    fh = logging.FileHandler(log_file)
-    fh.setLevel(logging.DEBUG)
-    # Vytvorenie stream handler-a pre konzolu
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.DEBUG)
-    # Nastavenie formátovania
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-    return logger
+# 1. Načítanie datasetu
+data_path = "12k_samples_12_families.csv"
+df = pd.read_csv(data_path)
 
-# Funkcia na vykreslenie a uloženie konfúznej matice
-def plot_confusion_matrix(cm, classes, fold, output_dir='plots'):
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap=plt.cm.Blues,
-                xticklabels=classes, yticklabels=classes)
-    plt.ylabel('Skutočné triedy')
-    plt.xlabel('Predikované triedy')
-    plt.title(f'Konfúzna matica - Fold {fold}')
-    os.makedirs(output_dir, exist_ok=True)
-    plot_path = os.path.join(output_dir, f'confusion_matrix_fold_{fold}.png')
-    plt.savefig(plot_path)
-    plt.close()
+# 2. Predspracovanie dát
+X = df.drop(columns=["Family", "Hash", "Category"])  
+y = df["Family"]
 
-# Funkcia na vykreslenie a uloženie learning curve
-def plot_learning_curve(estimator, X, y, fold, output_dir='plots', cv=5, n_jobs=-1):
-    train_sizes, train_scores, test_scores = learning_curve(estimator, X, y, cv=cv,
-                                                            n_jobs=n_jobs,
-                                                            train_sizes=np.linspace(0.1, 1.0, 5))
-    train_scores_mean = np.mean(train_scores, axis=1)
-    test_scores_mean = np.mean(test_scores, axis=1)
+# 3. Label Encoding
+label_encoder = LabelEncoder()
+y = label_encoder.fit_transform(y)
+
+# 4. Rozdelenie dát
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+
+# 5. Vytvorenie XGBoost DMatrix
+dtrain = xgb.DMatrix(X_train, label=y_train)
+dtest = xgb.DMatrix(X_test, label=y_test)
+
+# 6. Definícia parametrov modelu
+param = {
+    "objective": "multi:softmax",
+    "num_class": len(np.unique(y)),  
+    "max_depth": 2,  # O niečo hlbšie stromy
+    "learning_rate": 0.05,  # Mierne nižší learning rate na stabilnejšie učenie
+    "lambda": 3,  # Silnejšia L2 regularizácia
+    "alpha": 1,  # Silnejšia L1 regularizácia
+    "subsample": 0.8,  # Použiť viac dát pri trénovaní každého stromu
+    "colsample_bytree": 0.7,  # Použiť viac premenných pri trénovaní
+    "seed": 42,
+}
+
+
+num_round = 120  
+
+# 7. 10-násobná krížová validácia
+cv_results = xgb.cv(
+    param,
+    dtrain,
+    num_boost_round=num_round,
+    nfold=10,
+    metrics=["mlogloss", "merror"],
+    early_stopping_rounds=20,
+    seed=42
+)
+
+# 8. Zistenie optimálneho počtu boosting rounds
+optimal_rounds = cv_results['test-mlogloss-mean'].idxmin() + 1
+print(f"Optimal number of boosting rounds: {optimal_rounds}")
+
+# 9. Tréning finálneho modelu
+bst = xgb.train(param, dtrain, num_boost_round=num_round)
+
+# 10. Vyhodnotenie na testovacej množine
+y_test_pred = bst.predict(dtest).astype(int)
+test_accuracy = accuracy_score(y_test, y_test_pred)
+
+print("\nTest Accuracy:", test_accuracy)
+print("\nClassification Report:\n", classification_report(y_test, y_test_pred))
+
+# 11. Konfúzna matica
+cm = confusion_matrix(y_test, y_test_pred)
+plt.figure(figsize=(6, 5))
+plt.imshow(cm, cmap='Blues', interpolation='nearest')
+plt.title("Confusion Matrix")
+plt.colorbar()
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.savefig("confusion_matrix_xgboost.png")
+plt.close()
+
+# 12. Learning Curve (Trénovacia a validačná presnosť pri rôznych veľkostiach datasetu)
+train_sizes = np.linspace(0.1, 0.9, 9)
+train_scores, val_scores = [], []
+
+for frac in train_sizes:
+    # Výber náhodnej podmnožiny tréningových dát
+    X_frac, _, y_frac, _ = train_test_split(
+        X_train, y_train, train_size=frac, stratify=y_train, random_state=42
+    )
+
+    # Vytvorenie DMatrix pre túto podmnožinu
+    dfrac = xgb.DMatrix(X_frac, label=y_frac)
+
+    # Natrénovanie modelu na X_frac
+    model = xgb.train(param, dfrac, num_boost_round=optimal_rounds)
+
+    # Použitie tohto modelu na predikciu
+    train_scores.append(accuracy_score(y_frac, model.predict(dfrac).astype(int)))
+    val_scores.append(accuracy_score(y_test, model.predict(dtest).astype(int)))
+
+
+# 13. Vizualizácia Learning Curve
+plt.plot(train_sizes, train_scores, label="Train Accuracy")
+plt.plot(train_sizes, val_scores, label="Validation Accuracy")
+plt.title("Learning Curve")
+plt.xlabel("Training Set Size Fraction")
+plt.ylabel("Accuracy")
+plt.legend()
+plt.savefig("learning_curve_xgboost.png")
+plt.close()
+
+# 14. Uloženie výsledkov do súboru
+with open("results.txt", "w") as f:
+    f.write("===== XGBoost Model Results =====\n\n")
     
-    plt.figure()
-    plt.plot(train_sizes, train_scores_mean, 'o-', color="r", label="Tréningová skóre")
-    plt.plot(train_sizes, test_scores_mean, 'o-', color="g", label="CV skóre")
-    plt.title(f'Learning Curve - Fold {fold}')
-    plt.xlabel("Počet trénovacích príkladov")
-    plt.ylabel("Skóre")
-    plt.legend(loc="best")
-    os.makedirs(output_dir, exist_ok=True)
-    plot_path = os.path.join(output_dir, f'learning_curve_fold_{fold}.png')
-    plt.savefig(plot_path)
-    plt.close()
-
-def main():
-    # Nastavenie logovacieho súboru
-    log_file = 'training_log.txt'
-    logger = setup_logger(log_file)
-    logger.info("Spúšťam klasifikáciu malwaru pomocou XGBoost a 10-násobnej krížovej validácie.")
-
-    # Načítanie datasetu (predpokladáme súbor dataset.csv)
-    try:
-        data = pd.read_csv('12k_samples_12_families.csv')
-        logger.info("Dataset bol úspešne načítaný.")
-    except Exception as e:
-        logger.error(f"Chyba pri načítaní datasetu: {e}")
-        return
-
-    # Odstránenie stĺpcov 'Hash' a 'Category'
-    for col in ['Hash', 'Category']:
-        if col in data.columns:
-            data.drop(columns=[col], inplace=True)
-            logger.info(f"Stĺpec '{col}' bol odstránený.")
-        else:
-            logger.warning(f"Stĺpec '{col}' sa nenašiel v datasete.")
-
-    # Kontrola, či je prítomný stĺpec 'Family' (cieľová trieda)
-    if 'Family' not in data.columns:
-        logger.error("Stĺpec 'Family' (cieľová trieda) sa nenašiel v datasete.")
-        return
-
-    # Rozdelenie dát na vstupné atribúty X a cieľovú premennú y
-    X = data.drop(columns=['Family'])
-    y = data['Family']
-
-    # Kódovanie cieľových tried (ak sú nečíselné)
-    le = LabelEncoder()
-    y_encoded = le.fit_transform(y)
-    logger.info("Cieľové triedy boli zakódované pomocou LabelEncoder.")
-
-    # Definovanie 10-násobnej stratifikovanej krížovej validácie
-    skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
-    fold_no = 1
-    accuracies = []
-
-    # Krížová validácia
-    for train_index, test_index in skf.split(X, y_encoded):
-        logger.info(f"Spúšťam fold {fold_no}")
-        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
-        y_train, y_test = y_encoded[train_index], y_encoded[test_index]
-
-        # Inicializácia modelu XGBoost
-        model = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', random_state=42)
-        
-        # Tréning modelu s evaluačným setom pre zobrazenie priebehu
-        eval_set = [(X_test, y_test)]
-        model.fit(X_train, y_train, eval_set=eval_set, verbose=True)
-        logger.info(f"Tréning modelu dokončený pre fold {fold_no}.")
-
-        # Predikcia a vyhodnotenie
-        y_pred = model.predict(X_test)
-        acc = accuracy_score(y_test, y_pred)
-        accuracies.append(acc)
-        logger.info(f"Fold {fold_no} - Presnosť: {acc:.4f}")
-        
-        # Vytvorenie a uloženie konfúznej matice
-        cm = confusion_matrix(y_test, y_pred)
-        logger.info(f"Fold {fold_no} - Konfúzna matica:\n{cm}")
-        plot_confusion_matrix(cm, classes=le.classes_, fold=fold_no)
-
-        # Vytvorenie a uloženie learning curve na trénovacej množine
-        plot_learning_curve(model, X_train, y_train, fold=fold_no)
-
-        # Uloženie podrobného reportu klasifikácie
-        report = classification_report(y_test, y_pred)
-        logger.info(f"Fold {fold_no} - Report klasifikácie:\n{report}")
-
-        fold_no += 1
-
-    # Výpočet a zaznamenanie priemernej presnosti
-    avg_accuracy = np.mean(accuracies)
-    logger.info(f"Priemerná presnosť cez 10 foldov: {avg_accuracy:.4f}")
-
-if __name__ == '__main__':
-    main()
+    # Uloženie parametrov modelu
+    f.write("Hyperparameters:\n")
+    for key, value in param.items():
+        f.write(f"{key}: {value}\n")
+    
+    f.write(f"\nOptimal Boosting Rounds: {optimal_rounds}\n")
+    
+    # Výsledky krížovej validácie
+    f.write("\nCross-Validation Results:\n")
+    f.write(cv_results.to_string() + "\n")
+    
+    # Presnosť modelu
+    f.write(f"\nTest Accuracy: {test_accuracy:.4f}\n")
+    
+    # Klasifikačný report
+    f.write("\nClassification Report:\n")
+    f.write(classification_report(y_test, y_test_pred) + "\n")
+    
+    # Learning Curve výsledky
+    f.write("\n===== Learning Curve Data =====\n")
+    for i in range(len(train_sizes)):
+        f.write(f"Train Size: {train_sizes[i]:.2f}, Train Accuracy: {train_scores[i]:.4f}, Validation Accuracy: {val_scores[i]:.4f}\n")
