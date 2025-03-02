@@ -99,37 +99,101 @@ print(f"Shap values per class: {shap_values_per_class}")
 
 
 # ----------------- PRVY GRAF -----------------
-import matplotlib.pyplot as plt
-
-# Názvy tried podľa tvojho zoznamu
-nazvy_tried = ["Airpush", "Inoco", "Locker", "Mytrackp", "Shedun", 
-               "skymobi", "Slocker", "Smforw", "smsagent", "smsreg", 
-               "smsthief", "Styricka"]
 
 # Generovanie SHAP plotov pre každú triedu s názvom
-for class_idx in range(12):
-    print(f"Vytváram SHAP summary plot pre triedu {nazvy_tried[class_idx]}...")
+# for class_idx in range(12):
+#     print(f"Vytváram SHAP summary plot pre triedu {nazvy_tried[class_idx]}...")
     
-    # Získanie názvov najdôležitejších atribútov pre konkrétnu triedu
-    top_features = X_test.columns[important_features[class_idx]]
+#     # Získanie názvov najdôležitejších atribútov pre konkrétnu triedu
+#     top_features = X_test.columns[important_features[class_idx]]
     
-    # Generovanie SHAP Summary Plot pre danú triedu
-    shap.summary_plot(shap_values_per_class[class_idx][:, important_features[class_idx]], 
-                      X_test[top_features], 
-                      show=False)
+#     # Generovanie SHAP Summary Plot pre danú triedu
+#     shap.summary_plot(shap_values_per_class[class_idx][:, important_features[class_idx]], 
+#                       X_test[top_features], 
+#                       show=False)
     
-    # Uloženie grafu ako PNG s názvom triedy
-    plt.title(f"SHAP Summary Plot pre {nazvy_tried[class_idx]}")
-    plt.savefig(f"shap_summary_{nazvy_tried[class_idx]}.png")
-    plt.close()
+#     # Uloženie grafu ako PNG s názvom triedy
+#     plt.title(f"SHAP Summary Plot pre {nazvy_tried[class_idx]}")
+#     plt.savefig(f"shap_summary_{nazvy_tried[class_idx]}.png")
+#     plt.close()
 
-print("✅ Všetky SHAP grafy boli úspešne vytvorené a uložené s názvami tried!")
-
-
+# print("✅ Všetky SHAP grafy boli úspešne vytvorené a uložené s názvami tried!")
 
 
+# --------- Top atribúty naprieč všetkými triedami ------------
+
+# Vypočítanie priemerných absolútnych SHAP hodnôt naprieč všetkými triedami
+# mean_shap_values = np.mean(np.abs(shap_values), axis=(0, 2))  # priemer cez vzorky a triedy
+
+# # Zoradenie podľa dôležitosti
+# top_indices = np.argsort(mean_shap_values)[-20:][::-1]
+# top_features = X_test.columns[top_indices]
+# top_shap_values = mean_shap_values[top_indices]
+
+# # Vizualizácia
+# plt.figure(figsize=(10, 6))
+# plt.barh(top_features, top_shap_values)
+# plt.gca().invert_yaxis()
+# plt.title("Top 20 globálne najdôležitejších atribútov podľa priemerných SHAP hodnôt")
+# plt.xlabel("Priemerná absolútna SHAP hodnota")
+# plt.savefig("global_top20_features.png")
+# plt.show()
+
+# ----------- Heatmapa dôležitosti atribútov pre všetky triedy: --------------
+import seaborn as sns
+
+# Vypočítanie priemerných absolútnych SHAP hodnôt pre každý atribút a triedu
+mean_shap_per_class = np.mean(np.abs(shap_values), axis=0)  # priemer cez vzorky, tvar: (141, 12)
+
+# Vytvorenie DataFrame pre heatmapu
+import pandas as pd
+# heatmap_data = pd.DataFrame(mean_shap_per_class, index=X_test.columns, columns=nazvy_tried)
+
+# # Vizualizácia heatmapy
+# plt.figure(figsize=(12, 8))
+# sns.heatmap(heatmap_data, cmap="YlGnBu", linewidths=0.5)
+# plt.title("Heatmapa priemerných absolútnych SHAP hodnôt pre atribúty a triedy")
+# plt.xlabel("Triedy")
+# plt.ylabel("Atribúty")
+# plt.savefig("shap_heatmap.png")
+# plt.show()
+
+# # ---------- SHAP Summary Plot s clustrovaním -------------------
+# shap.summary_plot(shap_values, X_test, clustering='correlation', plot_type="bar", show=False)
+# plt.title("Clustrovaný SHAP Summary Plot")
+# plt.savefig("shap_clustered_summary.png")
+# plt.show()
 
 
+
+# ----------- 4. PCA + SHAP: Zníženie dimenzie a vizualizácia: -------------
+from sklearn.decomposition import PCA
+
+# PCA pre zníženie dimenzie na 2 komponenty
+# pca = PCA(n_components=2)
+# X_pca = pca.fit_transform(X_test)
+
+# # Vizualizácia PCA s SHAP hodnotami ako farby
+# plt.figure(figsize=(10, 6))
+# plt.scatter(X_pca[:, 0], X_pca[:, 1], c=np.mean(np.abs(shap_values), axis=(1, 2)), cmap='viridis')
+# plt.colorbar(label='Priemerná SHAP hodnota')
+# plt.title("PCA Vizualizácia s SHAP hodnotami")
+# plt.xlabel("PCA Komponenta 1")
+# plt.ylabel("PCA Komponenta 2")
+# plt.savefig("pca_shap_plot.png")
+# plt.show()
+
+
+# ----------- SHAP Interaction Plot: Interakcie medzi atribútmi: -----------
+# Získanie indexov najdôležitejších atribútov pre prvú triedu
+# top1 = important_features[0][0]
+# top2 = important_features[0][1]
+
+# # Vytvorenie interakčného SHAP plotu
+# shap.dependence_plot(top1, shap_values_per_class[0], X_test, interaction_index=top2)
+# plt.title(f"Interakcia medzi atribútmi {X_test.columns[top1]} a {X_test.columns[top2]}")
+# plt.savefig("shap_interaction_plot.png")
+# plt.show()
 
 
 
