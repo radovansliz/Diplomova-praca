@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 import xgboost as xgb
+from xgboost import XGBClassifier
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split, learning_curve, cross_val_score
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.preprocessing import LabelEncoder
 from joblib import dump, load
 import os
@@ -21,111 +22,107 @@ label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(y)
 
 # 4. Rozdelenie dát
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, stratify=y, random_state=42
-)
-
-# 5. Vytvorenie XGBoost DMatrix
-dtrain = xgb.DMatrix(X_train, label=y_train)
-dtest = xgb.DMatrix(X_test, label=y_test)
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.4, random_state=42, stratify=y_temp)
 
 # Cesta k uloženému modelu
 model_path = "xgboost_model.joblib"
 
-# 6. Definícia parametrov modelu
-param = {
-    "objective": "multi:softmax",
-    "num_class": len(np.unique(y)),  
-    "max_depth": 2,
-    "learning_rate": 0.05,
-    "lambda": 3,
-    "alpha": 1,
-    "subsample": 0.8,
-    "colsample_bytree": 0.7,
-    "seed": 42,
-}
-
-num_round = 120
-
-# Kontrola, či existuje uložený model
+# 5. Definícia a tréning modelu pomocou XGBClassifier
 if os.path.exists(model_path):
     print("Načítavam uložený model...")
-    bst = load(model_path)
+    xgb_clf = load(model_path)
 else:
-    # 7. 10-násobná krížová validácia
-    cv_results = xgb.cv(
-        param,
-        dtrain,
-        num_boost_round=num_round,
-        nfold=10,
-        metrics=["mlogloss", "merror"],
-        early_stopping_rounds=20,
-        seed=42
+    xgb_clf = XGBClassifier(
+        objective="multi:softmax",
+        num_class=len(np.unique(y)),
+        max_depth=2,
+        learning_rate=0.05,
+        reg_lambda=3,
+        reg_alpha=1,
+        subsample=0.8,
+        colsample_bytree=0.7,
+        seed=42,
+        n_estimators=120  # Počet boosting rounds
     )
-
-    # 8. Zistenie optimálneho počtu boosting rounds
-    optimal_rounds = cv_results['test-mlogloss-mean'].idxmin() + 1
-    print(f"Optimal number of boosting rounds: {optimal_rounds}")
-
-    # 9. Tréning finálneho modelu
-    bst = xgb.train(param, dtrain, num_boost_round=optimal_rounds)
-
-    # Uloženie modelu
-    dump(bst, model_path)
+    xgb_clf.fit(X_train, y_train)
+    dump(xgb_clf, model_path)
     print(f"Model bol natrenovaný a uložený ako: {model_path}")
 
-# 10. Vyhodnotenie na testovacej množine
-y_test_pred = bst.predict(dtest).astype(int)
+# 6. Hodnotenie na validačnej množine
+y_val_pred = xgb_clf.predict(X_val)
+val_accuracy = accuracy_score(y_val, y_val_pred)
+print("Validation Accuracy:", val_accuracy)
+
+# Výpočet metrik pre validačnú množinu
+cm_val = confusion_matrix(y_val, y_val_pred)
+FP_val = cm_val.sum(axis=0) - np.diag(cm_val)
+FN_val = cm_val.sum(axis=1) - np.diag(cm_val)
+TP_val = np.diag(cm_val)
+TN_val = cm_val.sum() - (FP_val + FN_val + TP_val)
+FPR_val = FP_val / (FP_val + TN_val)
+
+# 7. Krížová validácia
+cv_scores = cross_val_score(xgb_clf, X_train, y_train, cv=10)
+print("Cross-Validation Scores:", cv_scores)
+print("Mean CV Score:", cv_scores.mean())
+
+# 8. Vyhodnotenie na testovacej množine
+y_test_pred = xgb_clf.predict(X_test)
 test_accuracy = accuracy_score(y_test, y_test_pred)
-
 print("\nTest Accuracy:", test_accuracy)
-print("\nClassification Report:\n", classification_report(y_test, y_test_pred))
 
-# 11. Konfúzna matica
-cm = confusion_matrix(y_test, y_test_pred)
-plt.figure(figsize=(6, 5))
-plt.imshow(cm, cmap='Blues', interpolation='nearest')
-plt.title("Confusion Matrix")
-plt.colorbar()
-plt.xlabel("Predicted Label")
-plt.ylabel("True Label")
-plt.savefig("confusion_matrix_xgboost.png")
-plt.close()
+# Výpočet metrik pre testovaciu množinu
+cm_test = confusion_matrix(y_test, y_test_pred)
+FP_test = cm_test.sum(axis=0) - np.diag(cm_test)
+FN_test = cm_test.sum(axis=1) - np.diag(cm_test)
+TP_test = np.diag(cm_test)
+TN_test = cm_test.sum() - (FP_test + FN_test + TP_test)
+FPR_test = FP_test / (FP_test + TN_test)
 
-# 12. Learning Curve (Trénovacia a validačná presnosť pri rôznych veľkostiach datasetu)
-train_sizes = np.linspace(0.1, 0.9, 9)
-train_scores, val_scores = [], []
+# 9. Funkcia na vyhodnotenie modelu
+def evaluate_model(model, X_train, y_train, X_test, y_test):
+    cm = confusion_matrix(y_test, model.predict(X_test))
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=np.unique(y_test))
+    disp.plot(cmap=plt.cm.Blues, xticks_rotation='vertical')
+    plt.title("Confusion Matrix")
+    plt.savefig("confusion_matrix_xgboost.png")
+    plt.close()
 
-for frac in train_sizes:
-    X_frac, _, y_frac, _ = train_test_split(
-        X_train, y_train, train_size=frac, stratify=y_train, random_state=42
-    )
-    dfrac = xgb.DMatrix(X_frac, label=y_frac)
-    model = xgb.train(param, dfrac, num_boost_round=optimal_rounds)
-    train_scores.append(accuracy_score(y_frac, model.predict(dfrac).astype(int)))
-    val_scores.append(accuracy_score(y_test, bst.predict(dtest).astype(int)))
+    report = classification_report(y_test, model.predict(X_test))
+    with open("classification_report_xgboost.txt", "w") as f:
+        f.write("Validation Accuracy: {:.2f}\n".format(val_accuracy))
+        f.write("Test Accuracy: {:.2f}\n".format(test_accuracy))
+        f.write("\nClassification Report:\n")
+        f.write(report)
 
-# 13. Vizualizácia Learning Curve
-plt.plot(train_sizes, train_scores, label="Train Accuracy")
-plt.plot(train_sizes, val_scores, label="Validation Accuracy")
-plt.title("Learning Curve")
-plt.xlabel("Training Set Size Fraction")
-plt.ylabel("Accuracy")
-plt.legend()
-plt.savefig("learning_curve_xgboost.png")
-plt.close()
+        f.write("\n--- Výsledky 10-násobnej krížovej validácie ---\n")
+        f.write("Presnosti pre jednotlivé foldy: {}\n".format(cv_scores))
+        f.write("Priemerná presnosť: {:.2f}\n".format(np.mean(cv_scores)))
+        f.write("Štandardná odchýlka: {:.2f}\n".format(np.std(cv_scores)))
 
-# 14. Uloženie výsledkov do súboru
-with open("results.txt", "w") as f:
-    f.write("===== XGBoost Model Results =====\n\n")
-    f.write("Hyperparameters:\n")
-    for key, value in param.items():
-        f.write(f"{key}: {value}\n")
-    f.write(f"\nTest Accuracy: {test_accuracy:.4f}\n")
-    f.write("\nClassification Report:\n")
-    f.write(classification_report(y_test, y_test_pred) + "\n")
-    f.write("\n===== Learning Curve Data =====\n")
-    for i in range(len(train_sizes)):
-        f.write(f"Train Size: {train_sizes[i]:.2f}, Train Accuracy: {train_scores[i]:.4f}, Validation Accuracy: {val_scores[i]:.4f}\n")
+        f.write("\n--- Výpočtové hodnoty pre validačnú množinu ---\n")
+        f.write(f"FP_val: {FP_val}\nFN_val: {FN_val}\nTP_val: {TP_val}\nTN_val: {TN_val}\nFPR_val: {FPR_val}\n")
+        f.write("Priemerný Validation FPR: {:.2f}\n".format(np.mean(FPR_val)))
 
+        f.write("\n--- Výpočtové hodnoty pre testovaciu množinu ---\n")
+        f.write(f"FP_test: {FP_test}\nFN_test: {FN_test}\nTP_test: {TP_test}\nTN_test: {TN_test}\nFPR_test: {FPR_test}\n")
+        f.write("Priemerný Test FPR: {:.2f}\n".format(np.mean(FPR_test)))
+
+    train_sizes, train_scores, val_scores = learning_curve(model, X_train, y_train, cv=10, scoring='accuracy', train_sizes=np.linspace(0.1, 1.0, 10))
+    train_mean = np.mean(train_scores, axis=1)
+    val_mean = np.mean(val_scores, axis=1)
+
+    plt.plot(train_sizes, train_mean, label="Train Accuracy")
+    plt.plot(train_sizes, val_mean, label="Validation Accuracy")
+    plt.title("Learning Curve")
+    plt.xlabel("Training Set Size")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.savefig("learning_curve_xgboost.png")
+    plt.close()
+
+# Zavolanie funkcie na vyhodnotenie
+evaluate_model(xgb_clf, X_train, y_train, X_test, y_test)
+print("Model evaluation completed.")
 print("Results saved to results.txt, confusion_matrix_xgboost.png, and learning_curve_xgboost.png")

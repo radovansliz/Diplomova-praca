@@ -46,7 +46,7 @@ else:
 
 # 10-násobná krížová validácia
 print("Vykonávam 10-násobnú krížovú validáciu...")
-cv_scores = cross_val_score(etc_model, X_train, y_train, cv=10, scoring='accuracy')
+cv_scores = cross_val_score(etc_model, X_train, y_train, cv=10)
 print("Výsledky krížovej validácie:")
 print("Presnosti pre jednotlivé foldy:", cv_scores)
 print("Priemerná presnosť:", np.mean(cv_scores))
