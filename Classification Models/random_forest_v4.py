@@ -28,6 +28,7 @@ print("Dataset split into training, validation, and test sets.")
 
 #Ulozenie X_train mnoziny na nasledne pouzitie vysvetlitelnych metod
 X_train.to_csv("X_train_rf.csv", index=False)
+X_test.to_csv("X_test_rf.csv", index=False)
 
 # Cesta k uloženému modelu
 model_path = "rf_model.joblib"
