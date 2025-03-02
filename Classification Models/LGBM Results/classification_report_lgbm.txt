@@ -1,14 +1,5 @@
-Model Configuration:
-{'boosting_type': 'gbdt', 'class_weight': None, 'colsample_bytree': 0.8, 'importance_type': 'split', 'learning_rate': 0.02, 'max_depth': 4, 'min_child_samples': 60, 'min_child_weight': 0.001, 'min_split_gain': 0.0, 'n_estimators': 75, 'n_jobs': None, 'num_leaves': 5, 'objective': None, 'random_state': 42, 'reg_alpha': 1.2, 'reg_lambda': 1.2, 'subsample': 0.7, 'subsample_for_bin': 200000, 'subsample_freq': 0, 'bagging_fraction': 0.7, 'bagging_freq': 5}
-
 Validation Accuracy: 0.91
-Validation F1 Score: 0.91
 Test Accuracy: 0.90
-Test F1 Score: 0.90
-
-Cross-Validation Scores: [0.92428142 0.88834331 0.89516879 0.89279486 0.90688456 0.8863127
- 0.89282143 0.90660433 0.87045534 0.88279488]
-Mean CV Score: 0.89
 
 Classification Report:
               precision    recall  f1-score   support
@@ -29,3 +20,27 @@ Classification Report:
     accuracy                           0.90      2400
    macro avg       0.90      0.90      0.90      2400
 weighted avg       0.90      0.90      0.90      2400
+
+--- Výsledky 10-násobnej krížovej validácie ---
+Presnosti pre jednotlivé foldy: [0.92428142 0.88834331 0.89516879 0.89279486 0.90688456 0.8863127
+ 0.89282143 0.90660433 0.87045534 0.88279488]
+Priemerná presnosť: 0.89
+Štandardná odchýlka: 0.01
+
+--- Výpočtové hodnoty pre validačnú množinu ---
+FP_val: [ 8 12 27  2 18  8 72  5 18  4 21 32]
+FN_val: [13  1 67  0  9  9 20 21 16 39 18 14]
+TP_val: [187 199 133 200 191 191 180 179 184 161 182 186]
+TN_val: [2192 2188 2173 2198 2182 2192 2128 2195 2182 2196 2179 2168]
+FPR_val: [0.00363636 0.00545455 0.01227273 0.00090909 0.00818182 0.00363636
+ 0.03272727 0.00227273 0.00818182 0.00181818 0.00954545 0.01454545]
+Priemerný Validation FPR: 0.01
+
+--- Výpočtové hodnoty pre testovaciu množinu ---
+FP_test: [10  8 21  0 15  8 75  7 22  9 31 38]
+FN_test: [21  1 68  0  8  7 17 26 25 33 22 16]
+TP_test: [179 199 132 200 192 193 183 174 175 167 178 184]
+TN_test: [2190 2192 2179 2200 2185 2192 2125 2193 2178 2191 2169 2162]
+FPR_test: [0.00454545 0.00363636 0.00954545 0.         0.00681818 0.00363636
+ 0.03409091 0.00318182 0.01       0.00409091 0.01409091 0.01727273]
+Priemerný Test FPR: 0.01

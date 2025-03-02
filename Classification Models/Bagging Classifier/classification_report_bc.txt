@@ -1,9 +1,6 @@
 Validation Accuracy: 0.88
 Test Accuracy: 0.88
 
-Cross-Validation Scores: [0.8875     0.87083333 0.86597222 0.88472222 0.85277778]
-Mean CV Score: 0.87
-
 Classification Report:
               precision    recall  f1-score   support
 
@@ -23,3 +20,26 @@ Classification Report:
     accuracy                           0.88      2400
    macro avg       0.89      0.88      0.88      2400
 weighted avg       0.89      0.88      0.88      2400
+
+--- Výsledky 10-násobnej krížovej validácie ---
+Presnosti pre jednotlivé foldy: [0.8875     0.87083333 0.86597222 0.88472222 0.85277778]
+Priemerná presnosť: 0.87
+Štandardná odchýlka: 0.01
+
+--- Výpočtové hodnoty pre validačnú množinu ---
+FP_val: [16  8 14  0 11  9 87  4 40  7 26 59]
+FN_val: [17  2 83  0 11  9 26 24 42 33 23 11]
+TP_val: [183 198 117 200 189 191 174 176 158 167 177 189]
+TN_val: [2184 2192 2186 2200 2189 2191 2113 2196 2160 2193 2174 2141]
+FPR_val: [0.00727273 0.00363636 0.00636364 0.         0.005      0.00409091
+ 0.03954545 0.00181818 0.01818182 0.00318182 0.01181818 0.02681818]
+Priemerný Validation FPR: 0.01
+
+--- Výpočtové hodnoty pre testovaciu množinu ---
+FP_test: [15  6 15  0 14  6 80  2 42  6 27 72]
+FN_test: [26  1 81  0  8  8 30 24 33 35 19 20]
+TP_test: [174 199 119 200 192 192 170 176 167 165 181 180]
+TN_test: [2185 2194 2185 2200 2186 2194 2120 2198 2158 2194 2173 2128]
+FPR_test: [0.00681818 0.00272727 0.00681818 0.         0.00636364 0.00272727
+ 0.03636364 0.00090909 0.01909091 0.00272727 0.01227273 0.03272727]
+Priemerný Test FPR: 0.01

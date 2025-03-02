@@ -1,0 +1,46 @@
+Validation Accuracy: 0.88
+Test Accuracy: 0.88
+
+Classification Report:
+              precision    recall  f1-score   support
+
+     airpush       0.94      0.92      0.93       120
+       inoco       0.98      0.99      0.99       120
+      locker       0.86      0.59      0.70       120
+    mytrackp       1.00      1.00      1.00       120
+      shedun       0.94      0.97      0.95       120
+     skymobi       0.97      0.95      0.96       120
+     slocker       0.68      0.92      0.78       120
+      smforw       0.97      0.89      0.93       120
+    smsagent       0.90      0.67      0.77       120
+      smsreg       0.94      0.85      0.89       120
+    smsthief       0.84      0.88      0.86       120
+    styricka       0.65      0.89      0.75       120
+
+    accuracy                           0.88      1440
+   macro avg       0.89      0.88      0.88      1440
+weighted avg       0.89      0.88      0.88      1440
+
+--- Výsledky 10-násobnej krížovej validácie ---
+Presnosti pre jednotlivé foldy: [0.86190476 0.87738095 0.8702381  0.875      0.85595238 0.875
+ 0.84285714 0.87380952 0.89166667 0.88571429]
+Priemerná presnosť: 0.87
+Štandardná odchýlka: 0.01
+
+--- Výpočtové hodnoty pre validačnú množinu ---
+FP_val: [ 8  0 23  0 17  7 78  1  8 20 17 75]
+FN_val: [14  2 75  0  8 10 19 22 52 27 19  6]
+TP_val: [166 178 105 180 172 170 161 158 128 153 161 174]
+TN_val: [1972 1980 1957 1980 1963 1973 1902 1979 1972 1960 1963 1905]
+FPR_val: [0.0040404  0.         0.01161616 0.         0.00858586 0.00353535
+ 0.03939394 0.00050505 0.0040404  0.01010101 0.00858586 0.03787879]
+Priemerný Validation FPR: 0.01
+
+--- Výpočtové hodnoty pre testovaciu množinu ---
+FP_test: [ 7  2 12  0  8  3 52  3  9  6 20 57]
+FN_test: [10  1 49  0  4  6 10 13 40 18 15 13]
+TP_test: [110 119  71 120 116 114 110 107  80 102 105 107]
+TN_test: [1313 1318 1308 1320 1312 1317 1268 1317 1311 1314 1300 1263]
+FPR_test: [0.00530303 0.00151515 0.00909091 0.         0.00606061 0.00227273
+ 0.03939394 0.00227273 0.00681818 0.00454545 0.01515152 0.04318182]
+Priemerný Test FPR: 0.01
