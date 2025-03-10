@@ -39,15 +39,10 @@ X_train = pd.read_csv(data_path)
 X_test = pd.read_csv(data_path2)
 
 
-# Skontroluj, či majú rovnaké stĺpce
-if list(X_train.columns) != list(X_test.columns):
-    print("X_train a X_test nemajú rovnaké stĺpce!")
-    sys.exit(1)
-
 # # Ručne zadané názvy tried
-nazvy_tried = ["Airpush", "Inoco", "Locker", "Mytrackp", "Shedun", 
-               "skymobi", "Slocker", "Smforw", "smsagent", "smsreg", 
-               "smsthief", "Styricka"]
+nazvy_tried = ["airpush", "inoco", "iocker", "mytrackp", "Sshedun", 
+               "skymobi", "slocker", "smforw", "smsagent", "smsreg", 
+               "smsthief", "styricka"]
 
 # Generovanie SHAP hodnôt
 print("Generujem SHAP hodnoty...")
