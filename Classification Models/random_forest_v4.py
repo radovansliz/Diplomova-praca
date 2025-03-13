@@ -27,51 +27,51 @@ X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.4, r
 print("Dataset split into training, validation, and test sets.")
 
 # 🟢 Pripojenie stĺpca Family späť do X_train a X_test pre správne delenie
-X_train["Family"] = y_train.values
-X_test["Family"] = y_test.values
+# X_train["Family"] = y_train.values
+# X_test["Family"] = y_test.values
 
 # 🟢 Uloženie X_train a X_test pre vysvetliteľné metódy (s Family)
-X_train.to_csv("X_train_explain.csv", index=False)
-y_train.to_csv("y_train_explain.csv", index=False)
-X_test.to_csv("X_test_explain.csv", index=False)
-y_test.to_csv("y_test_explain.csv", index=False)
+X_train.to_csv("X_train_rf.csv", index=False)
+y_train.to_csv("y_train_rf.csv", index=False)
+X_test.to_csv("X_test_rf.csv", index=False)
+y_test.to_csv("y_test_rf.csv", index=False)
 print("Train and test datasets saved for explainability methods.")
 
-# 🟢 Definovanie širších skupín
-wider_categories = {
-    "Trojan": ["smsthief", "smforw", "mytrackp", "styricka", "smsagent", "locker"],
-    "Mixed_Malware": ["shedun", "inoco", "airpush", "smsreg", "skymobi", "slocker"]
-}
+# # 🟢 Definovanie širších skupín
+# wider_categories = {
+#     "Trojan": ["smsthief", "smforw", "mytrackp", "styricka", "smsagent", "locker"],
+#     "Mixed_Malware": ["shedun", "inoco", "airpush", "smsreg", "skymobi", "slocker"]
+# }
 
-# 🟢 Funkcia na rozdelenie dát podľa širších kategórií
-def split_by_category(X, category_map):
-    X_cat = {}
-    for cat, families in category_map.items():
-        # Filtrácia na základe stĺpca Family
-        X_cat[cat] = X[X["Family"].isin(families)].copy()
-        # Odstránenie stĺpca Family po rozdelení
-        X_cat[cat] = X_cat[cat].drop(columns=["Family"])
-    return X_cat
+# # 🟢 Funkcia na rozdelenie dát podľa širších kategórií
+# def split_by_category(X, category_map):
+#     X_cat = {}
+#     for cat, families in category_map.items():
+#         # Filtrácia na základe stĺpca Family
+#         X_cat[cat] = X[X["Family"].isin(families)].copy()
+#         # Odstránenie stĺpca Family po rozdelení
+#         X_cat[cat] = X_cat[cat].drop(columns=["Family"])
+#     return X_cat
 
-# 🟢 Rozdelenie dát do širších skupín pre train a test
-X_train_cat = split_by_category(X_train, wider_categories)
-X_test_cat = split_by_category(X_test, wider_categories)
+# # 🟢 Rozdelenie dát do širších skupín pre train a test
+# X_train_cat = split_by_category(X_train, wider_categories)
+# X_test_cat = split_by_category(X_test, wider_categories)
 
-# 🟢 Odstránenie stĺpca Family z pôvodných X_train a X_test
-X_train = X_train.drop(columns=["Family"])
-X_test = X_test.drop(columns=["Family"])
+# # 🟢 Odstránenie stĺpca Family z pôvodných X_train a X_test
+# X_train = X_train.drop(columns=["Family"])
+# X_test = X_test.drop(columns=["Family"])
 
-# 🟢 Uloženie rozdelených dát pre širšie skupiny (train)
-for cat in X_train_cat:
-    X_train_cat[cat].to_csv(f"X_train_{cat.lower()}.csv", index=False)
-    y_train[y_train.isin(wider_categories[cat])].to_csv(f"y_train_{cat.lower()}.csv", index=False)
+# # 🟢 Uloženie rozdelených dát pre širšie skupiny (train)
+# for cat in X_train_cat:
+#     X_train_cat[cat].to_csv(f"X_train_{cat.lower()}.csv", index=False)
+#     y_train[y_train.isin(wider_categories[cat])].to_csv(f"y_train_{cat.lower()}.csv", index=False)
 
-# 🟢 Uloženie rozdelených dát pre širšie skupiny (test)
-for cat in X_test_cat:
-    X_test_cat[cat].to_csv(f"X_test_{cat.lower()}.csv", index=False)
-    y_test[y_test.isin(wider_categories[cat])].to_csv(f"y_test_{cat.lower()}.csv", index=False)
+# # 🟢 Uloženie rozdelených dát pre širšie skupiny (test)
+# for cat in X_test_cat:
+#     X_test_cat[cat].to_csv(f"X_test_{cat.lower()}.csv", index=False)
+#     y_test[y_test.isin(wider_categories[cat])].to_csv(f"y_test_{cat.lower()}.csv", index=False)
 
-print("Datasets saved by category for explainability methods.")
+# print("Datasets saved by category for explainability methods.")
 
 # Cesta k uloženému modelu
 model_path = "rf_model.joblib"
