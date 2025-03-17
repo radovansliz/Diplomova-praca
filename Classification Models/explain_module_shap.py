@@ -54,8 +54,6 @@ local_vis_dir = f"{model_name}_SHAP_lokalne_vizualizacie"
 
 os.makedirs(global_vis_dir, exist_ok=True)
 os.makedirs(os.path.join(global_vis_dir, "vsetky"), exist_ok=True)
-os.makedirs(os.path.join(global_vis_dir, "mixed_malware"), exist_ok=True)
-os.makedirs(os.path.join(global_vis_dir, "trojan_malware"), exist_ok=True)
 os.makedirs(local_vis_dir, exist_ok=True)
 
 print("Priečinky pre vizualizácie vytvorené úspešne.")
