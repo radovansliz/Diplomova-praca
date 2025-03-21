@@ -3,11 +3,12 @@ import pandas as pd
 import json
 import os
 
-def train_model(data, config, model_type):
+def train_model(data, config, model_type, evaluation_model):
     print(f"Trénujem model: {model_type}")
     print(f"Konfigurácia: {config}")
-    print(f"Dataset: {data.head()}")
-    # Tu implementuj logiku tréningu podľa potreby
+    print(f"Evaluácia modelu po trénovaní: {evaluation_model}")
+    print(f"Dataset náhľad:\n{data.head()}")
+    # Tu implementuj logiku tréningu + evaluáciu, ak evaluation_model == True
 
 def main():
     while True:
@@ -16,7 +17,7 @@ def main():
             choices=[
                 "Trenovanie klasifikacneho modelu",
                 "Vysvetlitelnost modelu",
-                "Exit"
+                "Ukončiť"
             ],
         ).execute()
 
@@ -38,20 +39,26 @@ def main():
                 if model_choice == "Späť":
                     break
 
-                # Ziskanie ciest k súborom
+                # Cesta k CSV súboru
                 csv_path = inquirer.text(
                     message="Zadaj cestu k CSV súboru s dátami:"
                 ).execute()
 
+                # Cesta k JSON konfigurácii
                 json_path = inquirer.text(
                     message="Zadaj cestu k JSON súboru s konfiguráciou:"
                 ).execute()
 
-                # Overenie existencie súborov
+                # Chce používateľ spustiť evaluáciu?
+                evaluation_model = inquirer.confirm(
+                    message="Chceš po trénovaní spustiť evaluáciu a uložiť výsledky?",
+                    default=True
+                ).execute()
+
+                # Overenie existencie
                 if not os.path.exists(csv_path):
                     print(f"Súbor {csv_path} neexistuje.")
                     continue
-
                 if not os.path.exists(json_path):
                     print(f"Súbor {json_path} neexistuje.")
                     continue
@@ -65,8 +72,8 @@ def main():
                     print(f"Chyba pri načítaní súborov: {e}")
                     continue
 
-                # Zavolanie funkcie na tréning
-                train_model(data, config, model_choice)
+                # Zavolanie hlavnej funkcie
+                train_model(data, config, model_choice, evaluation_model)
 
         elif main_choice == "Vysvetlitelnost modelu":
             while True:
