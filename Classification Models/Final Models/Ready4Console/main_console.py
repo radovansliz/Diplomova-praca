@@ -1,34 +1,48 @@
 from InquirerPy import inquirer
-import pandas as pd
-import json
 import os
+import json
+import pandas as pd
+
+# Import jednotlivých modelových pipeline funkcií
+from Models.XGBoost_Classification_Model import run_xgboost_pipeline
+from Models.Adaboost_Classification_Model import run_adaboost_pipeline
+from Models.Bagging_Classifier_Model import run_bagging_pipeline
+from Models.Extra_Trees_Classification_Model import run_etc_pipeline
+from Models.LGBM_Classifier_Model import run_lgbm_pipeline
+from Models.Random_Forest_Classification_Model import run_rf_pipeline
+
+# Mapovanie modelových názvov na funkcie
+MODEL_FUNCTIONS = {
+    "XGBoost Classifier": run_xgboost_pipeline,
+    "AdaBoost Classifier": run_adaboost_pipeline,
+    "Bagging Classifier": run_bagging_pipeline,
+    "ExtraTrees Classifier": run_etc_pipeline,
+    "LGBM Classifier": run_lgbm_pipeline,
+    "Random Forest Classifier": run_rf_pipeline,
+}
 
 def train_model(csv_path, json_path, model_type, evaluation_model):
-    import pandas as pd
-    import json
-    import os
-
-    # Načítanie konfigurácie z JSON súboru
+    # Načítanie konfigurácie
     try:
         with open(json_path, "r") as config_file:
             config = json.load(config_file)
     except Exception as e:
-        print(f"Chyba pri načítaní JSON konfigurácie: {e}")
+        print(f"❌ Chyba pri načítaní JSON konfigurácie: {e}")
         return
 
     # Načítanie datasetu
     try:
         df = pd.read_csv(csv_path)
     except Exception as e:
-        print(f"Chyba pri načítaní CSV súboru: {e}")
+        print(f"❌ Chyba pri načítaní CSV súboru: {e}")
         return
 
-    # Vytvorenie vstupov a výstupov
+    # Definovanie vstupných a výstupných hodnôt
     try:
         X = df.drop(columns=["Family", "Hash", "Category"])
         y = df["Family"]
     except KeyError as e:
-        print(f"Chýbajúce stĺpce v datasete: {e}")
+        print(f"❌ Chýbajúce stĺpce v datasete: {e}")
         return
 
     # Debug výpisy
@@ -37,7 +51,14 @@ def train_model(csv_path, json_path, model_type, evaluation_model):
     print(f"🧠 Evaluácia bude spustená: {evaluation_model}")
     print(f"🔧 Konfigurácia: {config}")
 
-    # Tu neskôr implementuj: tréning modelu, evaluáciu, uloženie výsledkov
+    # Spustenie zvoleného modelu
+    if model_type in MODEL_FUNCTIONS:
+        print(f"🚀 Spúšťam tréning modelu {model_type}...")
+        MODEL_FUNCTIONS[model_type](X, y, config, evaluate_flag=evaluation_model)
+        print(f"✅ Tréning modelu {model_type} dokončený!\n")
+    else:
+        print(f"❌ Model '{model_type}' nie je podporovaný.")
+
 
 
 def main():
