@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score, learning_curve
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import BaggingClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from joblib import dump, load
@@ -13,58 +13,70 @@ import json
 EVALUATE_MODEL = True
 
 # Načítanie konfigurácie z JSON súboru
-with open(os.path.join("Konfiguracie", "adaboost_config.json"), "r") as config_file:
+with open(os.path.join("Konfiguracie", "bc_config.json"), "r") as config_file:
     config = json.load(config_file)
 
 # Načítanie datasetu
 data_path = "12k_samples_12_families.csv"
 df = pd.read_csv(data_path)
 
-# Kontrola na chýbajúce hodnoty a predspracovanie
-if df.isnull().sum().sum() > 0:
-    df = df.fillna(df.median())
+# Odstránenie stĺpcov "Hash" a "Category"
+df = df.drop(columns=["Hash", "Category"], errors='ignore')
+print("Columns 'Hash' and 'Category' removed.")
 
 # Definovanie vstupných a výstupných hodnôt
-X = df.drop(columns=["Family", "Hash", "Category"])
+X = df.drop(columns=["Family"])
 y = df["Family"]
 
 # Rozdelenie datasetu
 X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=config["test_size_test"], random_state=42, stratify=y)
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=config["test_size_val"], random_state=42, stratify=y_temp)
 
-# Ulozenie X_train mnoziny na nasledne pouzitie vysvetlitelnych metod
-X_train.to_csv("X_train_adaboost.csv", index=False)
-y_train.to_csv("y_train_adaboost.csv", index=False)
-X_test.to_csv("X_test_adaboost.csv", index=False)
-y_test.to_csv("y_test_adaboost.csv", index=False)
+# Uloženie datasetov pre explainability
+X_train.to_csv("X_train_bagging_classifier.csv", index=False)
+y_train.to_csv("y_train_bagging_classifier.csv", index=False)
+X_test.to_csv("X_test_bagging_classifier.csv", index=False)
+y_test.to_csv("y_test_bagging_classifier.csv", index=False)
 print("Train and test datasets saved for explainability methods.")
 
 # Cesta k uloženému modelu
-model_path = "adaboost_model.joblib"
+model_path = "bc_model.joblib"
 
 # Kontrola, či existuje uložený model
 if os.path.exists(model_path):
     print("Načítavam uložený model...")
-    adaboost_model = load(model_path)
+    bc_model = load(model_path)
 else:
-    # Definícia modelu AdaBoost z konfigurácie
-    adaboost_model = AdaBoostClassifier(
-        estimator=DecisionTreeClassifier(max_depth=config["max_depth"], random_state=42),
+    # Definícia základného klasifikátora z konfigurácie
+    base_estimator = DecisionTreeClassifier(
+        max_depth=config["max_depth"],
+        min_samples_split=config["min_samples_split"],
+        random_state=42
+    )
+
+    # Definícia Bagging Classifier z konfigurácie
+    bc_model = BaggingClassifier(
+        estimator=base_estimator,
         n_estimators=config["n_estimators"],
-        learning_rate=config["learning_rate"],
+        max_samples=config["max_samples"],
+        max_features=config["max_features"],
+        bootstrap=config["bootstrap"],
+        bootstrap_features=config["bootstrap_features"],
         random_state=42
     )
 
     # Tréning modelu
-    adaboost_model.fit(X_train, y_train)
+    bc_model.fit(X_train, y_train)
 
     # Uloženie modelu
-    dump(adaboost_model, model_path)
+    dump(bc_model, model_path)
     print(f"Model bol natrenovaný a uložený ako: {model_path}")
 
 # Hodnotenie na validačnej množine
-y_val_pred = adaboost_model.predict(X_val)
+y_val_pred = bc_model.predict(X_val)
 val_accuracy = accuracy_score(y_val, y_val_pred)
+print("Validation Results:")
+print(classification_report(y_val, y_val_pred))
 print("Validation Accuracy:", val_accuracy)
 
 # Výpočet metrik pre validačnú množinu
@@ -76,12 +88,12 @@ TN_val = cm_val.sum() - (FP_val + FN_val + TP_val)
 FPR_val = FP_val / (FP_val + TN_val)
 
 # Krížová validácia
-cv_scores = cross_val_score(adaboost_model, X_train, y_train, cv=10)
-mean_cv_score = cv_scores.mean()
-print("Mean CV Score:", mean_cv_score)
+cv_scores = cross_val_score(bc_model, X_train, y_train, cv=10)
+print("Cross-Validation Scores:", cv_scores)
+print("Mean CV Score:", cv_scores.mean())
 
 # Testovanie modelu
-y_test_pred = adaboost_model.predict(X_test)
+y_test_pred = bc_model.predict(X_test)
 test_accuracy = accuracy_score(y_test, y_test_pred)
 print("Test Results:")
 print(classification_report(y_test, y_test_pred))
@@ -101,11 +113,11 @@ def evaluate_model(model, X_train, y_train, X_test, y_test):
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=np.unique(y_test))
     disp.plot(cmap=plt.cm.Blues, xticks_rotation='vertical')
     plt.title("Confusion Matrix")
-    plt.savefig("confusion_matrix_adaboost.png")
+    plt.savefig("confusion_matrix_bc.png")
     plt.close()
 
     report = classification_report(y_test, model.predict(X_test))
-    with open("classification_report_adaboost.txt", "w") as f:
+    with open("classification_report_bc.txt", "w") as f:
         f.write("Validation Accuracy: {:.2f}\n".format(val_accuracy))
         f.write("Test Accuracy: {:.2f}\n".format(test_accuracy))
         f.write("\nClassification Report:\n")
@@ -134,9 +146,10 @@ def evaluate_model(model, X_train, y_train, X_test, y_test):
     plt.xlabel("Training Set Size")
     plt.ylabel("Accuracy")
     plt.legend()
-    plt.savefig("learning_curve_adaboost.png")
+    plt.savefig("learning_curve_bc.png")
     plt.close()
 
-# Zavolanie funkcie na vyhodnotenie podľa prepínača
+# Zavolanie funkcie na vyhodnotenie podla prepínača
 if EVALUATE_MODEL:
-    evaluate_model(adaboost_model, X_train, y_train, X_test, y_test)
+    evaluate_model(bc_model, X_train, y_train, X_test, y_test)
+    print("Model evaluation completed.")
