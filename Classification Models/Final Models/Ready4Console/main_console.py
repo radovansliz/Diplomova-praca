@@ -11,6 +11,10 @@ from Models.Extra_Trees_Classification_Model import run_etc_pipeline
 from Models.LGBM_Classifier_Model import run_lgbm_pipeline
 from Models.Random_Forest_Classification_Model import run_rf_pipeline
 
+# Import vysvetľovacích funkcií z XAI_Models
+from XAI_Models.SHAP_XAI import run_shap_explainer
+from XAI_Models.LIME_XAI import run_lime_explainer
+
 # Mapovanie modelových názvov na funkcie
 MODEL_FUNCTIONS = {
     "XGBoost Classifier": run_xgboost_pipeline,
@@ -59,6 +63,89 @@ def train_model(csv_path, json_path, model_type, evaluation_model):
     else:
         print(f"❌ Model '{model_type}' nie je podporovaný.")
 
+def explain_model(explainer_type):
+    """
+    Funkcia na vysvetlenie modelu pomocou SHAP alebo LIME.
+
+    Args:
+        explainer_type (str): "SHAP (Global & Local Explainer)" alebo "LIME (Local Explainer)"
+    """
+
+    # Ziskanie ciest k súborom
+    model_path = inquirer.text(
+        message="Zadaj cestu k modelu (.joblib):"
+    ).execute()
+
+    X_train_path = inquirer.text(
+        message="Zadaj cestu k trénovacím dátam (.csv):"
+    ).execute()
+
+    X_test_path = inquirer.text(
+        message="Zadaj cestu k testovacím dátam (.csv):"
+    ).execute()
+
+    y_test_path = inquirer.text(
+        message="Zadaj cestu k testovacím labelom (.csv):"
+    ).execute()
+
+    model_name = inquirer.text(
+        message="Zadaj názov modelu (použije sa na uloženie vizualizácií):"
+    ).execute()
+
+    # Overenie existencie súborov
+    for path in [model_path, X_train_path, X_test_path, y_test_path]:
+        if not os.path.exists(path):
+            print(f"❌ Súbor '{path}' neexistuje!")
+            return
+
+    # Ak bol zvolený SHAP, vypýtame výber vizualizácií
+    if explainer_type == "SHAP (Global & Local Explainer)":
+        shap_visualizations = inquirer.checkbox(
+            message="Vyber SHAP vizualizácie, ktoré chceš vygenerovať:",
+            choices=[
+                "Beeswarm",
+                "Barplot",
+                "Heatmap",
+                "Waterfall",
+                "Decision"
+            ],
+        ).execute()
+
+        # Nastavenie zapnutých vizualizácií
+        beeswarm = "Beeswarm" in shap_visualizations
+        barplot = "Barplot" in shap_visualizations
+        heatmap = "Heatmap" in shap_visualizations
+        waterfall = "Waterfall" in shap_visualizations
+        decision = "Decision" in shap_visualizations
+
+        # Spustenie SHAP explainera
+        run_shap_explainer(
+            model_path=model_path,
+            X_train_path=X_train_path,
+            X_test_path=X_test_path,
+            y_test_path=y_test_path,
+            model_name=model_name,
+            beeswarm=beeswarm,
+            barplot=barplot,
+            heatmap=heatmap,
+            waterfall=waterfall,
+            decision=decision
+        )
+
+    # Ak bol zvolený LIME, spustíme LIME explainer
+    elif explainer_type == "LIME (Local Explainer)":
+        n_samples = int(inquirer.text(
+            message="Koľko vzoriek chceš vysvetliť? (default: 5)"
+        ).execute() or 5)  # Default 5, ak nezadá nič
+
+        run_lime_explainer(
+            model_path=model_path,
+            X_train_path=X_train_path,
+            X_test_path=X_test_path,
+            y_test_path=y_test_path,
+            model_name=model_name,
+            n_samples=n_samples
+        )
 
 
 def main():
@@ -139,8 +226,8 @@ def main():
 
                 if explain_choice == "Späť":
                     break
-                print(f"\nZvolil si vysvetlitelnost: {explain_choice}\n")
-                # Tu sa neskôr pridá logika vysvetlenia
+
+                explain_model(explain_choice)
 
         elif main_choice == "Exit":
             print("\nUkončujem aplikáciu. Maj sa!\n")
