@@ -1,0 +1,9 @@
+{
+  "n_estimators": 80,
+  "max_depth": 9,
+  "min_samples_split": 8,
+  "min_samples_leaf": 3,
+  "max_features": "sqrt",
+  "test_size_test": 0.3,
+  "test_size_val": 0.4
+}
