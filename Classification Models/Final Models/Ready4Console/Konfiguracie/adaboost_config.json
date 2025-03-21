@@ -3,5 +3,6 @@
   "learning_rate": 0.1,
   "max_depth": 3,
   "test_size_test": 0.3,
-  "test_size_val": 0.4 
+  "test_size_val": 0.4,
+  "cross_validation_n": 10
 }

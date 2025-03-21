@@ -75,7 +75,7 @@ else:
 
 # Krížová validácia
 print("Performing 10-fold cross-validation...")
-cv_scores = cross_val_score(lgbm_model, X_train, y_train, cv=10)
+cv_scores = cross_val_score(lgbm_model, X_train, y_train, cv=config["cross_validation_n"])
 print("Cross-validation scores:", cv_scores)
 print("Mean CV Score:", cv_scores.mean())
 
@@ -139,7 +139,7 @@ def evaluate_model(model, X_train, y_train, X_test, y_test):
         f.write(f"FP_test: {FP_test}\nFN_test: {FN_test}\nTP_test: {TP_test}\nTN_test: {TN_test}\nFPR_test: {FPR_test}\n")
         f.write("Priemerný Test FPR: {:.2f}\n".format(np.mean(FPR_test)))
 
-    train_sizes, train_scores, val_scores = learning_curve(model, X_train, y_train, cv=10, scoring='accuracy', train_sizes=np.linspace(0.1, 1.0, 10))
+    train_sizes, train_scores, val_scores = learning_curve(model, X_train, y_train, cv=config["cross_validation_n"], scoring='accuracy', train_sizes=np.linspace(0.1, 1.0, 10))
     train_mean = np.mean(train_scores, axis=1)
     val_mean = np.mean(val_scores, axis=1)
 
