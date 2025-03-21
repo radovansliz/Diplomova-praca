@@ -3,12 +3,42 @@ import pandas as pd
 import json
 import os
 
-def train_model(data, config, model_type, evaluation_model):
-    print(f"Trénujem model: {model_type}")
-    print(f"Konfigurácia: {config}")
-    print(f"Evaluácia modelu po trénovaní: {evaluation_model}")
-    print(f"Dataset náhľad:\n{data.head()}")
-    # Tu implementuj logiku tréningu + evaluáciu, ak evaluation_model == True
+def train_model(csv_path, json_path, model_type, evaluation_model):
+    import pandas as pd
+    import json
+    import os
+
+    # Načítanie konfigurácie z JSON súboru
+    try:
+        with open(json_path, "r") as config_file:
+            config = json.load(config_file)
+    except Exception as e:
+        print(f"Chyba pri načítaní JSON konfigurácie: {e}")
+        return
+
+    # Načítanie datasetu
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as e:
+        print(f"Chyba pri načítaní CSV súboru: {e}")
+        return
+
+    # Vytvorenie vstupov a výstupov
+    try:
+        X = df.drop(columns=["Family", "Hash", "Category"])
+        y = df["Family"]
+    except KeyError as e:
+        print(f"Chýbajúce stĺpce v datasete: {e}")
+        return
+
+    # Debug výpisy
+    print(f"\n✅ Dataset načítaný: {df.shape[0]} riadkov, {df.shape[1]} stĺpcov")
+    print(f"➡️ Model: {model_type}")
+    print(f"🧠 Evaluácia bude spustená: {evaluation_model}")
+    print(f"🔧 Konfigurácia: {config}")
+
+    # Tu neskôr implementuj: tréning modelu, evaluáciu, uloženie výsledkov
+
 
 def main():
     while True:
