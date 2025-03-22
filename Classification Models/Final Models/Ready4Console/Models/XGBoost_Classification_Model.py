@@ -25,7 +25,7 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, config, val_accuracy
         f.write("\nClassification Report:\n")
         f.write(report)
 
-        f.write("\n--- Výsledky 10-násobnej krížovej validácie ---\n")
+        f.write("\n--- Výsledky krížovej validácie ---\n")
         f.write("Presnosti pre jednotlivé foldy: {}\n".format(cv_scores))
         f.write("Priemerná presnosť: {:.2f}\n".format(np.mean(cv_scores)))
         f.write("Štandardná odchýlka: {:.2f}\n".format(np.std(cv_scores)))
@@ -55,13 +55,16 @@ def run_xgboost_pipeline(X, y, config, evaluate_flag=True):
     label_encoder = LabelEncoder()
     y_encoded = label_encoder.fit_transform(y)
 
+    # Uloženie label encoder tried pre spätný mapping
+    np.save("xgboost_label_classes.npy", label_encoder.classes_)
+
     X_train, X_temp, y_train, y_temp = train_test_split(X, y_encoded, test_size=config["test_size_test"], random_state=42, stratify=y_encoded)
     X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=config["test_size_val"], random_state=42, stratify=y_temp)
 
     X_train.to_csv("X_train_xgboost.csv", index=False)
-    y_train.to_csv("y_train_xgboost.csv", index=False)
+    pd.Series(y_train).to_csv("y_train_xgboost.csv", index=False)
     X_test.to_csv("X_test_xgboost.csv", index=False)
-    y_test.to_csv("y_test_xgboost.csv", index=False)
+    pd.Series(y_test).to_csv("y_test_xgboost.csv", index=False)
     print("Train and test datasets saved for explainability methods.")
 
     model_path = "xgboost_model.joblib"
