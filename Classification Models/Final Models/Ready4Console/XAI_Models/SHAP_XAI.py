@@ -222,7 +222,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
 
         # ✅ Funkcia na generovanie popisov tried do legendy
         def class_labels():
-            return [f"{unique_classes[i]}" for i in range(len(unique_classes))]
+            return [f"{class_names[i]}" for i in range(len(class_names))]
 
         # ✅ Transformácia SHAP hodnôt do listu (1 matica pre každú triedu)
         shap_values_list = [shap_values_selected[:, :, i] for i in range(len(unique_classes))]
@@ -231,7 +231,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
         for idx, row_index in enumerate(selected_samples):
             actual_class = y_test_selected[idx]  # Skutočná trieda
             predicted_class = y_pred_labels[idx]  # Modelom predikovaná trieda
-
+            
             # ✅ Overenie správnosti predikcie
             correct_prediction = actual_class == predicted_class
             classification_status = "SPRÁVNA" if correct_prediction else "NESPRÁVNA"
