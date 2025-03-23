@@ -54,7 +54,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
     local_vis_dir = f"{model_name}_SHAP_lokalne_vizualizacie"
 
     os.makedirs(global_vis_dir, exist_ok=True)
-    os.makedirs(os.path.join(global_vis_dir, "vsetky"), exist_ok=True)
+    os.makedirs(os.path.join(global_vis_dir, "All"), exist_ok=True)
     os.makedirs(local_vis_dir, exist_ok=True)
 
     print(f"📂 Priečinky '{global_vis_dir}' a '{local_vis_dir}' vytvorené.")
@@ -84,7 +84,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
                 offsets = collection.get_offsets()
                 collection.set_sizes([80] * len(offsets))
             plt.tight_layout()
-            plt.savefig(os.path.join(global_vis_dir, "vsetky", f"shap_beeswarm_{class_names[i]}.png"))
+            plt.savefig(os.path.join(global_vis_dir, "All", f"shap_beeswarm_{class_names[i]}.png"))
             plt.close()
 
         print("✅ SHAP Beeswarm Ploty pre všetky triedy úspešne uložené!")
@@ -115,7 +115,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
                 collection.set_sizes([80] * len(offsets))  # 🟢 Zväčšenie guľôčok na veľkosť 50
 
             plt.tight_layout()
-            plt.savefig(os.path.join(global_vis_dir, "vsetky", f"shap_bar_{class_names[i]}.png"))
+            plt.savefig(os.path.join(global_vis_dir, "All", f"shap_bar_{class_names[i]}.png"))
             plt.close()
 
         print("SHAP Bar Ploty pre všetky triedy uložené.")
@@ -150,7 +150,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
             plt.subplots_adjust(left=0.4)
             plt.gcf().set_size_inches(35, 20)
             plt.tight_layout()
-            plt.savefig(os.path.join(global_vis_dir, "vsetky", f"shap_heatmap_{class_names[i]}.png"))
+            plt.savefig(os.path.join(global_vis_dir, "All", f"shap_heatmap_{class_names[i]}.png"))
             plt.close()
 
 
