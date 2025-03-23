@@ -7,6 +7,7 @@ from joblib import load
 import mpld3
 import matplotlib.lines as mlines
 import json
+import pathlib  # Pridaj hore do importov, ak ešte nemáš
 
 
 def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model_name,
@@ -38,11 +39,21 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
     model = load(model_path)
 
     # Podpora label encoder tried pre XGBoost
+    # Získanie názvov tried
     if label_classes_path and os.path.exists(label_classes_path):
-        with open(label_classes_path, "r") as f:
-            class_names = json.load(f)
+        ext = pathlib.Path(label_classes_path).suffix.lower()
+        if ext == ".json":
+            with open(label_classes_path, "r", encoding="utf-8") as f:
+                class_names = json.load(f)
+        elif ext == ".npy":
+            class_names = np.load(label_classes_path, allow_pickle=True).tolist()
+        else:
+            print(f"❌ Nepodporovaný formát súboru: {ext}")
+            return
+        print("🔠 Triedy načítané z label_classes súboru.")
     else:
         class_names = model.classes_
+
 
     X_train = pd.read_csv(X_train_path)
     X_test = pd.read_csv(X_test_path)
