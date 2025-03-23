@@ -62,11 +62,30 @@ def train_model(csv_path, json_path, model_type, evaluation_model):
         print(f"❌ Model '{model_type}' nie je podporovaný.")
 
 def explain_model(explainer_type):
+    model_type = inquirer.select(
+        message="Vyber klasifikátor, ktorý bol použitý na trénovanie:",
+        choices=[
+            "XGBoost Classifier",
+            "AdaBoost Classifier",
+            "Bagging Classifier",
+            "ExtraTrees Classifier",
+            "LGBM Classifier",
+            "Random Forest Classifier"
+        ]).execute()
+
     model_path = inquirer.text(message="Zadaj cestu k modelu (.joblib):").execute()
     X_train_path = inquirer.text(message="Zadaj cestu k trénovacím dátam (.csv):").execute()
     X_test_path = inquirer.text(message="Zadaj cestu k testovacím dátam (.csv):").execute()
     y_test_path = inquirer.text(message="Zadaj cestu k testovacím labelom (.csv):").execute()
     model_name = inquirer.text(message="Zadaj názov modelu (bude použitý v názvoch priečinkov):").execute()
+
+    label_classes_path = None
+    if model_type == "XGBoost Classifier":
+        label_classes_path = inquirer.text(
+            message="Zadaj cestu k súboru s label classes (xgboost_label_classes.npy): [nepovinné]"
+        ).execute()
+        if label_classes_path.strip() == "":
+            label_classes_path = None
 
     for path in [model_path, X_train_path, X_test_path, y_test_path]:
         if not os.path.exists(path):
@@ -89,7 +108,8 @@ def explain_model(explainer_type):
             barplot="Barplot" in shap_visualizations,
             heatmap="Heatmap" in shap_visualizations,
             waterfall="Waterfall" in shap_visualizations,
-            decision="Decision" in shap_visualizations
+            decision="Decision" in shap_visualizations,
+            label_classes_path=label_classes_path
         )
 
     elif explainer_type == "LIME (Local Explainer)":
@@ -103,7 +123,8 @@ def explain_model(explainer_type):
             X_test_path=X_test_path,
             y_test_path=y_test_path,
             model_name=model_name,
-            n_samples=n_samples
+            n_samples=n_samples,
+            label_classes_path=label_classes_path
         )
 
 def main():
@@ -150,7 +171,6 @@ def main():
                     print(f"Súbor {json_path} neexistuje.")
                     continue
 
-                # Zavolanie hlavnej funkcie
                 train_model(csv_path, json_path, model_choice, evaluation_model)
 
         elif main_choice == "Vysvetlitelnost modelu":

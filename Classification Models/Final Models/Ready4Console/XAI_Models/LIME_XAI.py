@@ -3,10 +3,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import mpld3  # Na interaktívne HTML vizualizácie
+import json
 from joblib import load
 from lime.lime_tabular import LimeTabularExplainer
 
-def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model_name, n_samples=5):
+def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model_name, n_samples=5, label_classes_path=None):
     """
     Spustí LIME Local Explainer na interpretáciu modelu.
 
@@ -17,18 +18,24 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
         y_test_path (str): Cesta k testovacím labelom (CSV)
         model_name (str): Názov modelu (použije sa pre názov výstupného priečinka)
         n_samples (int, optional): Počet vzoriek na vysvetlenie. Default = 5.
+        label_classes_path (str, optional): Cesta k JSON súboru s label encoder triedami (iba pre XGBoost). Default = None.
     """
 
-    # Skontroluj existenciu súborov
     for path in [model_path, X_train_path, X_test_path, y_test_path]:
         if not os.path.exists(path):
             print(f"❌ Súbor '{path}' neexistuje!")
             return
 
-    # Načítanie modelu a dát
     print("📥 Načítavam model a dáta...")
     model = load(model_path)
-    class_names = model.classes_
+
+    # Získanie názvov tried
+    if label_classes_path and os.path.exists(label_classes_path):
+        with open(label_classes_path, "r") as f:
+            class_names = json.load(f)
+        print("🔠 Triedy načítané z label_classes súboru.")
+    else:
+        class_names = model.classes_
 
     X_train = pd.read_csv(X_train_path)
     X_test = pd.read_csv(X_test_path)
@@ -36,12 +43,10 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
 
     print("✅ Všetky dátové množiny načítané úspešne.")
 
-    # Vytvorenie priečinka na vizualizácie
     local_vis_dir = f"{model_name}_LIME_lokalne_vizualizacie"
     os.makedirs(local_vis_dir, exist_ok=True)
     print(f"📂 Priečinok '{local_vis_dir}' vytvorený.")
 
-    # Inicializácia LIME explaineru
     explainer = LimeTabularExplainer(
         training_data=X_train.values,
         feature_names=X_train.columns.tolist(),
@@ -50,7 +55,6 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
         discretize_continuous=True
     )
 
-    # Generovanie vysvetlení pre n_samples náhodných vzoriek
     sample_indices = np.random.choice(len(X_test), n_samples, replace=False)
 
     for i, idx in enumerate(sample_indices):
@@ -59,12 +63,10 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
             sample[0], model.predict_proba, num_features=20, top_labels=len(class_names)
         )
 
-        # Uloženie HTML vizualizácie
         html_path = os.path.join(local_vis_dir, f"lime_explanation_{i}.html")
         explanation.save_to_file(html_path)
         print(f"✅ LIME vysvetlenie uložené: {html_path}")
 
-        # Uloženie obrázkov atribútov pre každú triedu
         for label in range(len(class_names)):
             plt.figure(figsize=(35, 20))
             fig = explanation.as_pyplot_figure(label=label)

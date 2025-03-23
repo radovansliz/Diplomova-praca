@@ -10,7 +10,7 @@ import matplotlib.lines as mlines  # Na manuálne pridanie legendy
 
 # -------------------------- [ KONTROLA ARGUMENTOV ] ----------------------
 if len(sys.argv) != 5:
-    print("Použitie: python explain_module_shap.py <cesta_k_modelu.joblib> <cesta_k_X_train.csv> <cesta_k_X_test.csv> <nazov_modelu>")
+    print("Použitie: python explain_module_shap.py <cesta_k_modelu.joblib> <cesta_k_X_train.csv> <cesta_k_X_test.csv> <cesta_k_y_test.csv> <nazov_modelu>")
     sys.exit(1)
 
 model_path = sys.argv[1]
