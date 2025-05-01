@@ -12,7 +12,7 @@ import pathlib
 def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model_name, n_samples=5, label_classes_path=None):
     for path in [model_path, X_train_path, X_test_path, y_test_path]:
         if not os.path.exists(path):
-            print(f"❌ Súbor '{path}' neexistuje!")
+            print(f"Súbor '{path}' neexistuje!")
             return
 
     print("📥 Načítavam model a dáta...")
@@ -26,9 +26,9 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
         elif ext == ".npy":
             class_names = np.load(label_classes_path, allow_pickle=True).tolist()
         else:
-            print(f"❌ Nepodporovaný formát súboru: {ext}")
+            print(f"Nepodporovaný formát súboru: {ext}")
             return
-        print("🔠 Triedy načítané z label_classes súboru.")
+        print("Triedy načítané z label_classes súboru.")
     else:
         class_names = model.classes_
 
@@ -36,11 +36,11 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
     X_test = pd.read_csv(X_test_path)
     y_test = pd.read_csv(y_test_path).values.flatten()
 
-    print("✅ Všetky dátové množiny načítané úspešne.")
+    print("Všetky dátové množiny načítané úspešne.")
 
     local_vis_dir = f"{model_name}_LIME_lokalne_vizualizacie"
     os.makedirs(local_vis_dir, exist_ok=True)
-    print(f"📂 Priečinok '{local_vis_dir}' vytvorený.")
+    print(f"Priečinok '{local_vis_dir}' vytvorený.")
 
     explainer = LimeTabularExplainer(
         training_data=X_train.values,
@@ -72,12 +72,12 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
         correct = pred_name == true_name
         correctness = "CORRECT" if correct else "WRONG"
 
-        print(f"🧠 Vzorka {i} - Skutočný: {true_name}, Predikovaný: {pred_name} - {'✔️ SPRÁVNE' if correct else '❌ NESPRÁVNE'}")
+        print(f"Vzorka {i} - Skutočný: {true_name}, Predikovaný: {pred_name} - {'SPRÁVNE' if correct else 'NESPRÁVNE'}")
 
         html_filename = f"lime_explanation_{i}_REAL_{true_name}_PRED_{pred_name}_{correctness}.html"
         html_path = os.path.join(local_vis_dir, html_filename)
         explanation.save_to_file(html_path, labels=explanation.available_labels())
-        print(f"✅ LIME vysvetlenie uložené: {html_path}")
+        print(f"LIME vysvetlenie uložené: {html_path}")
 
         for label in range(len(class_names)):
             plt.figure(figsize=(35, 20))
@@ -92,4 +92,4 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
             plt.savefig(png_path)
             plt.close()
 
-    print("🎉 Všetky vysvetlenia boli úspešne vygenerované.")
+    print("Všetky vysvetlenia boli úspešne vygenerované.")
