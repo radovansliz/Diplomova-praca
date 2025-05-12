@@ -15,7 +15,7 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
             print(f"Súbor '{path}' neexistuje!")
             return
 
-    print("📥 Načítavam model a dáta...")
+    print("Načítavam model a dáta...")
     model = load(model_path)
 
     if label_classes_path and os.path.exists(label_classes_path):
@@ -35,8 +35,6 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
     X_train = pd.read_csv(X_train_path)
     X_test = pd.read_csv(X_test_path)
     y_test = pd.read_csv(y_test_path).values.flatten()
-
-    print("Všetky dátové množiny načítané úspešne.")
 
     local_vis_dir = f"{model_name}_LIME_lokalne_vizualizacie"
     os.makedirs(local_vis_dir, exist_ok=True)
@@ -61,7 +59,6 @@ def run_lime_explainer(model_path, X_train_path, X_test_path, y_test_path, model
         predicted_label = model.predict(sample)[0]
         true_label = y_test[idx]
 
-        # Rozhodni, či sú labely čísla alebo stringy
         if isinstance(predicted_label, (int, np.integer)) and isinstance(true_label, (int, np.integer)):
             pred_name = class_names[predicted_label]
             true_name = class_names[true_label]

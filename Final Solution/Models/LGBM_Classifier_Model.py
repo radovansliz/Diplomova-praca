@@ -62,7 +62,7 @@ def run_lgbm_pipeline(X, y, config, evaluate_flag=True):
     model_path = "lgbm_model.joblib"
 
     if os.path.exists(model_path):
-        print("Načítavam uložený model...")
+        print("Loading saved model...")
         lgbm_model = load(model_path)
     else:
         lgbm_model = LGBMClassifier(
@@ -88,9 +88,9 @@ def run_lgbm_pipeline(X, y, config, evaluate_flag=True):
             eval_metric=config["eval_metric"],
             callbacks=[early_stopping(stopping_rounds=config["early_stopping_rounds"]), log_evaluation(5)]
         )
-        print("Training complete!")
+        print("Training complete")
         dump(lgbm_model, model_path)
-        print(f"Model bol natrenovaný a uložený ako: {model_path}")
+        print(f"Model has been trained and saved as: {model_path}")
 
     print("Performing cross-validation...")
     cv_scores = cross_val_score(lgbm_model, X_train, y_train, cv=config["cross_validation_n"])
@@ -132,10 +132,10 @@ def run_lgbm_pipeline(X, y, config, evaluate_flag=True):
 
 if __name__ == "__main__":
     EVALUATE_MODEL = True
-    with open(os.path.join("Konfiguracie", "lgbm_config.json"), "r") as config_file:
+    with open(os.path.join("Configs", "lgbm_config.json"), "r") as config_file:
         config = json.load(config_file)
 
-    data_path = "12k_samples_12_families.csv"
+    data_path = "final_dataset.csv"
     df = pd.read_csv(data_path)
     df = df.drop(columns=["Hash", "Category"], errors='ignore')
     X = df.drop(columns=["Family"])

@@ -50,7 +50,6 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, config, val_accuracy
     plt.close()
 
 def run_rf_pipeline(X, y, config, evaluate_flag=True):
-    print("Splitting dataset...")
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=config["test_size_test"], random_state=42, stratify=y)
     X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=config["test_size_val"], random_state=42, stratify=y_temp)
     print("Dataset split into training, validation, and test sets.")
@@ -64,7 +63,7 @@ def run_rf_pipeline(X, y, config, evaluate_flag=True):
     model_path = "rf_model.joblib"
 
     if os.path.exists(model_path):
-        print("Načítavam uložený model...")
+        print("Loading saved model...")
         rf_model = load(model_path)
     else:
         rf_model = RandomForestClassifier(
@@ -80,7 +79,7 @@ def run_rf_pipeline(X, y, config, evaluate_flag=True):
         print("Model training completed.")
 
         dump(rf_model, model_path)
-        print(f"Model bol natrenovaný a uložený ako: {model_path}")
+        print(f"Model has been trained and saved as: {model_path}")
 
     y_val_pred = rf_model.predict(X_val)
     val_accuracy = accuracy_score(y_val, y_val_pred)
@@ -118,10 +117,10 @@ def run_rf_pipeline(X, y, config, evaluate_flag=True):
 
 if __name__ == "__main__":
     EVALUATE_MODEL = True
-    with open(os.path.join("Konfiguracie", "rf_config.json"), "r") as config_file:
+    with open(os.path.join("Configs", "rf_config.json"), "r") as config_file:
         config = json.load(config_file)
 
-    data_path = "12k_samples_12_families.csv"
+    data_path = "final_dataset.csv"
     df = pd.read_csv(data_path)
     print("Dataset loaded successfully.")
 

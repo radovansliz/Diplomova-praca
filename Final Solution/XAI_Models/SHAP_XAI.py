@@ -7,7 +7,7 @@ from joblib import load
 import mpld3
 import matplotlib.lines as mlines
 import json
-import pathlib  # Pridaj hore do importov, ak ešte nemáš
+import pathlib
 
 
 def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model_name,
@@ -59,8 +59,6 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
     X_test = pd.read_csv(X_test_path)
     y_test = pd.read_csv(y_test_path)
 
-    print(" Všetky dátové množiny načítané úspešne.")
-
     global_vis_dir = f"{model_name}_SHAP_globalne_vizualizacie"
     local_vis_dir = f"{model_name}_SHAP_lokalne_vizualizacie"
 
@@ -81,7 +79,6 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
 
         plt.rcParams['figure.dpi'] = 200
 
-        # Vykreslenie Beeswarm Plot pre každú triedu
         for i in range(num_classes):
             plt.figure(figsize=(35, 20))
             shap.plots.beeswarm(shap_values_all[..., i], max_display=20, show=False,)
@@ -103,27 +100,23 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
     if barplot:
         print("Vytváram Bar Plot pre všetky triedy zvlášť...")
 
-        # Počet tried
         num_classes = shap_values_all.values.shape[2]
 
-        # Nastavenie DPI pre vysokú kvalitu grafov na MacOS
-        plt.rcParams['figure.dpi'] = 200  #  Vyššia kvalita grafov
+        plt.rcParams['figure.dpi'] = 200
 
-        # Vytvorenie Beeswarm Plot pre každú triedu
         for i in range(num_classes):
-            plt.figure(figsize=(35, 20))  #  Extra široký a vysoký graf
+            plt.figure(figsize=(35, 20))
             shap.plots.bar(shap_values_all[..., i], max_display=20, show=False)
             plt.title(f"SHAP Bar Plot - Trieda {class_names[i]}", fontsize=25)
             plt.xlabel(f"SHAP value (impact on model output) - Rodina: {class_names[i]}", fontsize=25)
             plt.ylabel("Atribúty", fontsize=25)
             plt.yticks(rotation=0, fontsize=20)
-            plt.subplots_adjust(left=0.4)  #  Viac miesta pre názvy atribútov
-            plt.gcf().set_size_inches(35, 20)  #  Full-screen mód pre MacOS
+            plt.subplots_adjust(left=0.4)
+            plt.gcf().set_size_inches(35, 20)
 
-            #  Zväčšenie guľôčok manuálne pomocou plt.scatter
             for collection in plt.gca().collections:
                 offsets = collection.get_offsets()
-                collection.set_sizes([80] * len(offsets))  #  Zväčšenie guľôčok na veľkosť 50
+                collection.set_sizes([80] * len(offsets))
 
             plt.tight_layout()
             plt.savefig(os.path.join(global_vis_dir, "All", f"shap_bar_{class_names[i]}.png"))
@@ -134,14 +127,10 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
     if heatmap:
         print("Vytváram Heatmap Plot pre všetky triedy zvlášť...")
 
-        # Počet tried
         num_classes = shap_values_all.values.shape[2]
 
-        # Nastavenie DPI pre vysokú kvalitu grafov na MacOS
-        plt.rcParams['figure.dpi'] = 200  #  Vyššia kvalita grafov
+        plt.rcParams['figure.dpi'] = 200
 
-        # Vytvorenie Heatmap Plot pre každú triedu
-        # Vytvorenie Heatmap Plot pre každú triedu
         for i in range(num_classes):
             plt.figure(figsize=(35, 20))
 
@@ -181,10 +170,8 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
         for j, sample_idx in enumerate(selected_samples):
             sample_input = X_test.iloc[[sample_idx]]
 
-            # predikcia môže byť index alebo názov
             predicted_label = model.predict(sample_input)[0]
 
-            # Získanie názvu a indexu triedy
             if isinstance(predicted_label, (int, np.integer)):
                 predicted_class_name = class_names[predicted_label]
                 class_index = predicted_label
@@ -196,7 +183,6 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
                     print(f" Trieda {predicted_class_name} nebola nájdená v model.classes_: {model.classes_}")
                     continue
 
-            # Skutočná trieda
             actual_class_raw = y_test.iloc[sample_idx, 0]
             if actual_class_raw in class_names:
                 actual_class_name = actual_class_raw
@@ -239,64 +225,51 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
         decision_vis_dir = os.path.join(local_vis_dir, "decision")
         os.makedirs(decision_vis_dir, exist_ok=True)
 
-        # Vyberieme num_samples_to_plot náhodných vzoriek na vizualizáciu
         num_samples_to_plot = 20
         selected_samples = np.random.choice(X_test.shape[0], num_samples_to_plot, replace=False)
 
-        # Očakávané hodnoty (Base Values)
         expected_values = explainer.expected_value
         if isinstance(expected_values, np.ndarray):
             expected_values = expected_values.tolist()
 
-        # SHAP hodnoty pre vybrané vzorky
         shap_values_selected = shap_values_all.values[selected_samples]
 
-        # Skutočné triedy z `y_test`
         y_test_selected = y_test.iloc[selected_samples, 0].values  
 
-        # Predikované názvy tried (už sú v stringovej forme)
         y_pred_labels = model.predict(X_test.iloc[selected_samples])
 
-        # Unikátne triedy v poradí, ako ich model naučil
         unique_classes = model.classes_
 
-        # Funkcia na generovanie popisov tried do legendy
         def class_labels():
             return [f"{class_names[i]}" for i in range(len(class_names))]
 
-        # Transformácia SHAP hodnôt do listu (1 matica pre každú triedu)
         shap_values_list = [shap_values_selected[:, :, i] for i in range(len(unique_classes))]
 
-        # Generovanie decision plotov pre vybrané vzorky
         for idx, row_index in enumerate(selected_samples):
-            actual_class = y_test_selected[idx]  # Skutočná trieda
-            predicted_class = y_pred_labels[idx]  # Modelom predikovaná trieda
+            actual_class = y_test_selected[idx] 
+            predicted_class = y_pred_labels[idx]
             
-            # Overenie správnosti predikcie
             correct_prediction = actual_class == predicted_class
             classification_status = "SPRÁVNA" if correct_prediction else "NESPRÁVNA"
 
-            # Generovanie decision plotu
             plt.figure(figsize=(30, 15))
             shap.multioutput_decision_plot(
-                expected_values,               # Očakávané hodnoty
-                shap_values_list,              # SHAP hodnoty ako list
-                row_index=idx,                 # Index vzorky
-                feature_names=X_test.columns.tolist(),  # Názvy atribútov
-                highlight=[np.where(unique_classes == predicted_class)[0][0]],  # Správne indexovanie
-                legend_labels=class_labels(),  # Generované popisy tried
+                expected_values,
+                shap_values_list,
+                row_index=idx,
+                feature_names=X_test.columns.tolist(),
+                highlight=[np.where(unique_classes == predicted_class)[0][0]],
+                legend_labels=class_labels(),
                 legend_location="lower right",
                 show=False,
             )
 
-            # Pridanie textu do grafu
             plt.title(f"SHAP Multioutput Decision Plot - Vzorka {row_index}\n"
                     f"Predikcia: {predicted_class} | Skutočná trieda: {actual_class} "
                     f"({classification_status})", fontsize=14)
 
-            # Uloženie grafu
             filename = f"shap_multioutput_decision_plot_sample_{row_index}_{classification_status}.png"
-            plt.subplots_adjust(left=0.4)  # Viac miesta pre názvy atribútov
+            plt.subplots_adjust(left=0.4)
             plt.gcf().set_size_inches(30, 15)
             plt.tight_layout()
             plt.savefig(os.path.join(decision_vis_dir, filename))

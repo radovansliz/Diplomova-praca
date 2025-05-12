@@ -8,7 +8,6 @@ from joblib import dump, load
 import os
 import json
 
-# Funkcia na vyhodnotenie modelu
 def evaluate_model(model, X_train, y_train, X_test, y_test, config, val_accuracy, test_accuracy, cv_scores, FP_val, FN_val, TP_val, TN_val, FPR_val, FP_test, FN_test, TP_test, TN_test, FPR_test):
     cm = confusion_matrix(y_test, model.predict(X_test))
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=np.unique(y_test))
@@ -50,7 +49,6 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, config, val_accuracy
     plt.savefig("learning_curve_etc.png")
     plt.close()
 
-# Funkcia pre celý pipeline
 def run_etc_pipeline(X, y, config, evaluate_flag=True):
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=config["test_size_test"], random_state=42, stratify=y)
     X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=config["test_size_val"], random_state=42, stratify=y_temp)
@@ -64,7 +62,7 @@ def run_etc_pipeline(X, y, config, evaluate_flag=True):
     model_path = "etc_model.joblib"
 
     if os.path.exists(model_path):
-        print("Načítavam uložený model...")
+        print("Loading saved model...")
         etc_model = load(model_path)
     else:
         etc_model = ExtraTreesClassifier(
@@ -77,14 +75,15 @@ def run_etc_pipeline(X, y, config, evaluate_flag=True):
         )
         etc_model.fit(X_train, y_train)
         dump(etc_model, model_path)
-        print("Model bol natrenovaný a uložený ako:", model_path)
+        print(f"Model has been trained and saved as: {model_path}")
 
-    print("Vykonávam krížovú validáciu...")
+    print("Performing cross-validation...")
     cv_scores = cross_val_score(etc_model, X_train, y_train, cv=config["cross_validation_n"])
-    print("Výsledky krížovej validácie:")
-    print("Presnosti pre jednotlivé foldy:", cv_scores)
-    print("Priemerná presnosť:", np.mean(cv_scores))
-    print("Štandardná odchýlka:", np.std(cv_scores))
+    print("Cross Validation Results:")
+    print("Folds accuracy:", cv_scores)
+    print("Mean CV Score:", np.mean(cv_scores))
+    print("Standard Deviation:", np.std(cv_scores))
+    
 
     y_val_pred = etc_model.predict(X_val)
     val_accuracy = accuracy_score(y_val, y_val_pred)
@@ -117,10 +116,10 @@ def run_etc_pipeline(X, y, config, evaluate_flag=True):
 
 if __name__ == "__main__":
     EVALUATE_MODEL = True
-    with open(os.path.join("Konfiguracie", "etc_config.json"), "r") as config_file:
+    with open(os.path.join("Configs", "etc_config.json"), "r") as config_file:
         config = json.load(config_file)
 
-    data_path = "12k_samples_12_families.csv"
+    data_path = "final_dataset.csv"
     df = pd.read_csv(data_path)
 
     X = df.drop(columns=["Family", "Hash", "Category"])

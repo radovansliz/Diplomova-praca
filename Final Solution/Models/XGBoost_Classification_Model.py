@@ -55,7 +55,6 @@ def run_xgboost_pipeline(X, y, config, evaluate_flag=True):
     label_encoder = LabelEncoder()
     y_encoded = label_encoder.fit_transform(y)
 
-    # Uloženie label encoder tried pre spätný mapping
     np.save("xgboost_label_classes.npy", label_encoder.classes_)
 
     X_train, X_temp, y_train, y_temp = train_test_split(X, y_encoded, test_size=config["test_size_test"], random_state=42, stratify=y_encoded)
@@ -70,7 +69,7 @@ def run_xgboost_pipeline(X, y, config, evaluate_flag=True):
     model_path = "xgboost_model.joblib"
 
     if os.path.exists(model_path):
-        print("Načítavam uložený model...")
+        print("Loading saved model...")
         xgb_clf = load(model_path)
     else:
         xgb_clf = XGBClassifier(
@@ -87,7 +86,7 @@ def run_xgboost_pipeline(X, y, config, evaluate_flag=True):
         )
         xgb_clf.fit(X_train, y_train)
         dump(xgb_clf, model_path)
-        print(f"Model bol natrenovaný a uložený ako: {model_path}")
+        print(f"Model has been trained and saved as: {model_path}")
 
     y_val_pred = xgb_clf.predict(X_val)
     val_accuracy = accuracy_score(y_val, y_val_pred)
@@ -121,10 +120,10 @@ def run_xgboost_pipeline(X, y, config, evaluate_flag=True):
 
 if __name__ == "__main__":
     EVALUATE_MODEL = True
-    with open(os.path.join("Konfiguracie", "xgboost_config.json"), "r") as config_file:
+    with open(os.path.join("Configs", "xgboost_config.json"), "r") as config_file:
         config = json.load(config_file)
 
-    data_path = "12k_samples_12_families.csv"
+    data_path = "final_dataset.csv"
     df = pd.read_csv(data_path)
     X = df.drop(columns=["Family", "Hash", "Category"])
     y = df["Family"]

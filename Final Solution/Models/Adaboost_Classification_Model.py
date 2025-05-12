@@ -9,7 +9,6 @@ from joblib import dump, load
 import os
 import json
 
-# Funkcia na vyhodnotenie modelu
 def evaluate_model(model, X_train, y_train, X_test, y_test, config, val_accuracy, test_accuracy, cv_scores, FP_val, FN_val, TP_val, TN_val, FPR_val, FP_test, FN_test, TP_test, TN_test, FPR_test):
     cm = confusion_matrix(y_test, model.predict(X_test))
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=np.unique(y_test))
@@ -51,7 +50,6 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, config, val_accuracy
     plt.savefig("learning_curve_adaboost.png")
     plt.close()
 
-# Funkcia pre tréning a testovanie modelu
 def run_adaboost_pipeline(X, y, config, evaluate_flag=True):
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=config["test_size_test"], random_state=42, stratify=y)
     X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=config["test_size_val"], random_state=42, stratify=y_temp)
@@ -65,7 +63,7 @@ def run_adaboost_pipeline(X, y, config, evaluate_flag=True):
     model_path = "adaboost_model.joblib"
 
     if os.path.exists(model_path):
-        print("Načítavam uložený model...")
+        print("Loading saved model...")
         adaboost_model = load(model_path)
     else:
         adaboost_model = AdaBoostClassifier(
@@ -76,7 +74,7 @@ def run_adaboost_pipeline(X, y, config, evaluate_flag=True):
         )
         adaboost_model.fit(X_train, y_train)
         dump(adaboost_model, model_path)
-        print(f"Model bol natrenovaný a uložený ako: {model_path}")
+        print(f"Model has been trained and saved as: {model_path}")
 
     y_val_pred = adaboost_model.predict(X_val)
     val_accuracy = accuracy_score(y_val, y_val_pred)
@@ -109,13 +107,12 @@ def run_adaboost_pipeline(X, y, config, evaluate_flag=True):
     if evaluate_flag:
         evaluate_model(adaboost_model, X_train, y_train, X_test, y_test, config, val_accuracy, test_accuracy, cv_scores, FP_val, FN_val, TP_val, TN_val, FPR_val, FP_test, FN_test, TP_test, TN_test, FPR_test)
 
-# Spustenie
 if __name__ == "__main__":
     EVALUATE_MODEL = True
-    with open(os.path.join("Konfiguracie", "adaboost_config.json"), "r") as config_file:
+    with open(os.path.join("Configs", "adaboost_config.json"), "r") as config_file:
         config = json.load(config_file)
 
-    data_path = "12k_samples_12_families.csv"
+    data_path = "final_dataset.csv"
     df = pd.read_csv(data_path)
 
     if df.isnull().sum().sum() > 0:

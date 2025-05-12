@@ -23,7 +23,6 @@ MODEL_FUNCTIONS = {
 }
 
 def train_model(csv_path, json_path, model_type, evaluation_model):
-    # Načítanie konfigurácie
     try:
         with open(json_path, "r") as config_file:
             config = json.load(config_file)
@@ -31,14 +30,12 @@ def train_model(csv_path, json_path, model_type, evaluation_model):
         print(f"Chyba pri načítaní JSON konfigurácie: {e}")
         return
 
-    # Načítanie datasetu
     try:
         df = pd.read_csv(csv_path)
     except Exception as e:
         print(f"Chyba pri načítaní CSV súboru: {e}")
         return
 
-    # Definovanie vstupných a výstupných hodnôt
     try:
         X = df.drop(columns=["Family", "Hash", "Category"])
         y = df["Family"]
@@ -187,7 +184,7 @@ def main():
                 explain_model(explain_choice)
 
         elif main_choice == "Ukončiť":
-            print("\nUkončujem aplikáciu. Maj sa!\n")
+            print("\nUkončujem aplikáciu\n")
             break
 
 if __name__ == "__main__":
