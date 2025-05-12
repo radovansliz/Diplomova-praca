@@ -13,22 +13,6 @@ import pathlib
 def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model_name,
                         beeswarm=False, barplot=False, heatmap=False, waterfall=False, decision=False,
                         label_classes_path=None):
-    """
-    Spustí SHAP explainer na interpretáciu modelu.
-
-    Args:
-        model_path (str): Cesta k uloženému modelu (.joblib)
-        X_train_path (str): Cesta k trénovacím dátam (CSV)
-        X_test_path (str): Cesta k testovacím dátam (CSV)
-        y_test_path (str): Cesta k testovacím labelom (CSV)
-        model_name (str): Názov modelu (použije sa pre názov výstupného priečinka)
-        beeswarm (bool): Generovať beeswarm ploty? Default=False.
-        barplot (bool): Generovať bar ploty? Default=False.
-        heatmap (bool): Generovať heatmap ploty? Default=False.
-        waterfall (bool): Generovať waterfall ploty? Default=False.
-        decision (bool): Generovať decision ploty? Default=False.
-        label_classes_path (str): Cesta k súboru s uloženými triedami labelov (iba pre XGBoost, nepovinné)
-    """
 
     for path in [model_path, X_train_path, X_test_path, y_test_path]:
         if not os.path.exists(path):
@@ -95,7 +79,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
             plt.savefig(os.path.join(global_vis_dir, "All", f"shap_beeswarm_{class_names[i]}.png"))
             plt.close()
 
-        print("SHAP Beeswarm Ploty pre všetky triedy úspešne uložené!")
+        print("SHAP Beeswarm Ploty pre všetky triedy boli úspešne uložené")
 
     if barplot:
         print("Vytváram Bar Plot pre všetky triedy zvlášť...")
@@ -122,7 +106,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
             plt.savefig(os.path.join(global_vis_dir, "All", f"shap_bar_{class_names[i]}.png"))
             plt.close()
 
-        print("SHAP Bar Ploty pre všetky triedy uložené.")
+        print("SHAP Bar Ploty pre všetky triedy boli uložené.")
 
     if heatmap:
         print("Vytváram Heatmap Plot pre všetky triedy zvlášť...")
@@ -154,7 +138,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
             plt.close()
 
 
-        print("SHAP Heatmap Ploty pre všetky triedy uložené.")
+        print("SHAP Heatmap Ploty pre všetky triedy boli uložené.")
 
 
 
@@ -211,13 +195,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
             plt.savefig(os.path.join(waterfall_vis_dir, filename))
             plt.close()
 
-        print("Waterfall Ploty pre náhodné vzorky úspešne uložené!")
-
-
-
-
-
-
+        print("Waterfall Ploty pre náhodné vzorky boli úspešne uložené")
 
     if decision:
         print("Generujem Multioutput Decision Plot...")
@@ -275,7 +253,7 @@ def run_shap_explainer(model_path, X_train_path, X_test_path, y_test_path, model
             plt.savefig(os.path.join(decision_vis_dir, filename))
             plt.close()
 
-        print("Všetky Multioutput Decision Ploty úspešne vygenerované a uložené!")
+        print("Všetky Multioutput Decision Ploty boli úspešne vygenerované a uložené")
 
 
-    print("Všetky vizualizácie dokončené!")
+    print("Všetky vizualizácie boli dokončené")
